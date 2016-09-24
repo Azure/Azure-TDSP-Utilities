@@ -12,7 +12,7 @@ This is an **early preview** release of the Data Science Utilities for TDSP. We 
 
 In this release, we are releasing two utilities in R:
 
-- [Interactive Data Exploration, Analysis, and Reporting](DataScienceUtilities/DataReport-Utils/).
+- [Interactive Data Exploration, Analysis, and Reporting (IDEAR)](DataScienceUtilities/DataReport-Utils/).
 - [Automated Modeling and Reporting](DataScienceUtilities/Modeling/)
 
 You can easily run these two utilities on sample data in the **Data/Common** directory. 
