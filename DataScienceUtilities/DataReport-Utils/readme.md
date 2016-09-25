@@ -44,7 +44,3 @@ The R libraries used in IDEAR include
 ### Licensing
 
 Use of the software is subject to acceptance of the [License Agreement](LICENSE.txt) 
-
-### Contact
-
-This product is under development. For any questions and feedbacks, please send email to <AzureDataScienceProc@microsoft.com>
