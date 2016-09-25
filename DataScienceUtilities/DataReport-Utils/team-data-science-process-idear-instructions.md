@@ -29,7 +29,7 @@ You need to install the following programs to use IDEAR:
 2. RStudio: version 0.99.903 is recommended.
 3. If you are using a Windows client to log in to a Linux DSVM, you must [install X2Go on your client](https://azure.microsoft.com/en-us/documentation/articles/machine-learning-data-science-linux-dsvm-intro/#installing-and-configuring-x2go-client). Log in to the DSVM using X2Go. The X2Go interface appears as shown in the following figure:
 
-![0](./media/team-data-science-process-idear-instructions/idear-modeling-0.png)
+![0](./media/team-data-science-process-idear-instructions/idear-modeling-0.PNG)
 
 
 >[AZURE.NOTE] The first time you run IDEAR, it checks whether you have all the dependent libraries installed. It may take 5-10 minutes to install the missing libraries like shiny and knitr. After the installation of missing libraries completes, stop IDEAR, restart RStudio, and run IDEAR again.
