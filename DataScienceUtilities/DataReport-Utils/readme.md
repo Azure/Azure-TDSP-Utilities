@@ -14,10 +14,10 @@ The prerequisites are
 
 To start IDEAR, 
 
-- Click *Source* to run the script [Run-Data-Quality-Report-Utility.R](Run-Data-Quality-Report-Utility.R) in RStudio. 
+- Click *Source* to run the script [Run-IDEAR.R](Run-IDEAR.R) in RStudio. 
 - When prompted, select the YAML file which contains the dataset configurations.
 
-For details, please read [documentation](Data-Quality-Report-Utility.md).
+For details, please read [instructions](team-data-science-process-idear-instructions.md).
 
 ### R libraries 
 The R libraries used in IDEAR include
