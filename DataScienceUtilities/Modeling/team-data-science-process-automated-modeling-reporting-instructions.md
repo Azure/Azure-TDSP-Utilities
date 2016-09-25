@@ -110,7 +110,7 @@ Here is an example YAML file for the UCI bike rental/sharing dataset.
     - 'trainTestSplitFraction = 0.75'<br>
 **RDataSource:**<br>
     - 'loadRData = TRUE'<br>
-    - 'RDataLoc = "complete\\path\\to\\the\\RData\\BikeSharingHour.RData"'<br>
+    - 'RDataLoc = "complete\\\path\\\to\\\the\\\RData\\\BikeSharingHour.RData"'<br>
 **SQLSource:**<br>
     - 'loadSQLData = FALSE'<br>
     - 'Server = "\<servername\>.database.windows.net"'<br>
