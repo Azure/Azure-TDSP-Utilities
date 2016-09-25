@@ -52,9 +52,9 @@ The Automated Modeling and Reporting utility is an R markdown file that produces
 
 When the utility completes running, the models you specified in the YAML file are trained. The example that comes with this utility have three models specified in the YAML file:
 
-- (regularized regression using [glmnet](https://cran.r-project.org/web/packages/glmnet/index.html) package 
-- random forest using [randomForest](https://cran.r-project.org/web/packages/randomForest/index.html) package
-- boosting trees using [xgboost](https://cran.r-project.org/web/packages/xgboost/index.html) package
+- Regularized regression using [glmnet](https://cran.r-project.org/web/packages/glmnet/index.html) package 
+- Random forest using [randomForest](https://cran.r-project.org/web/packages/randomForest/index.html) package
+- Boosted decision trees using [xgboost](https://cran.r-project.org/web/packages/xgboost/index.html) package
 
 If you do not want to run all three models, you can specify which ones to run in the parameter settings of the YAML file. The accuracy of the models is compared by Caret and relative feature importance plots are reported. Currently, the Automated Modeling and Reporting utility is provided in two _.rmd_ files:
 
@@ -113,10 +113,10 @@ Here is an example YAML file for the UCI bike rental/sharing dataset.
     - 'RDataLoc = "complete\\path\\to\\the\\RData\\BikeSharingHour.RData"'<br>
 **SQLSource:**<br>
     - 'loadSQLData = FALSE'<br>
-    - 'Server = "<servername\>.database.windows.net"'<br>
-    - 'Database = "<database name\>"'<br>
-    - 'Username = "<user name\>"'<br>
-    - 'Password = "<password\>"'<br>
+    - 'Server = "\<servername\>.database.windows.net"'<br>
+    - 'Database = "\<database name\>"'<br>
+    - 'Username = "\<user name\>"'<br>
+    - 'Password = "\<password\>"'<br>
     - 'WindowsDriver = "ODBC Driver 11 for SQL Server"'<br>
     - 'LinuxDriver = "ODBC Driver 13 for SQL Server"'<br>
     - 'Query = "SELECT * FROM table_name"'<br>
