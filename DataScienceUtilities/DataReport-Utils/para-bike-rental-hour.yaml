@@ -1,0 +1,12 @@
+DataFilePath:
+    ..\\..\\Data\\Common\\UCI_Bike_Rental\\hour.csv
+HasHeader:
+    Yes
+Separator:
+    ','
+Target:
+    cnt
+ColumnsToExclude:
+    instant
+RLogFilePath:
+    bikesharing-hour.log.r

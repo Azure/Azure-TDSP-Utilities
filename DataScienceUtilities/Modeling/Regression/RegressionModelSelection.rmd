@@ -1,0 +1,276 @@
+---
+title: "Automated Model training: Regression"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+author: "Team Data Science Process by Microsoft"
+output: 
+  html_document: 
+    fig_caption: yes
+    number_sections: yes
+    toc: yes
+    theme: journal
+    highlight: espresso
+    keep_md: false
+    toc_float: true
+runtime: knit
+---
+
+<hr>
+##Introduction
+This R Markdown performs <b>exploratory</b> model training and evaluation for <b>regressoin</b> tasks using the <a href="http://topepo.github.io/caret/index.html" target="_blank">Caret package</a>, which has convenient functions for resampling, hyper-parameter sweeping, and model accuracy comparison. The user can use Caret with R machine learning packages (such as, <a href="https://cran.r-project.org/web/packages/glmnet/index.html" target="_blank">glmnet</a>, <a href="https://cran.r-project.org/web/packages/randomForest/index.html" target="_blank">RandomForest</a>, <a href="https://cran.r-project.org/web/packages/xgboost/index.html" target="_blank">xgboost</a>, etc.). We use these three algorithms with limited paraUsers can customize this template to create their own model training and evaluation process for linear regression tasks. 
+<hr>
+
+```{r Load Packages, message=FALSE, warning=FALSE, echo=FALSE}
+#rmarkdown::render("RegressionModelSelection.rmd")
+options(warn=-1)
+options(repos='http://cran.rstudio.com/')
+list.of.packages <- c('glmnet', 'yaml', 'randomForest', 'xgboost', 'lattice', 'shiny', 'gridExtra','lme4','RODBC')
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,'Package'])]
+if(length(new.packages))
+  install.packages(new.packages)
+
+# Install pbkrtest, caret
+if (!'pbkrtest' %in% installed.packages()[,'Package']){
+  pbkrtesturl <- 'https://cran.r-project.org/src/contrib/Archive/pbkrtest/pbkrtest_0.4-5.tar.gz'
+  install.packages(pbkrtesturl, repos=NULL, type='source')
+  library(pbkrtest)
+}
+
+list.of.packages <- c('caret')
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,'Package'])]
+if(length(new.packages))
+  install.packages(new.packages)
+
+# Load packages
+library(RODBC)
+library(yaml)
+library(shiny)
+library(lme4)
+library(glmnet)
+library(randomForest)
+library(xgboost)
+library(lattice)
+library(gridExtra)
+library(caret)
+```
+
+##Specify YAML parameter file for input data and modeling
+Specify the file which contins the parameter set to train the ML models with. If there are multiple values for each parameter file, then modes ML algorithms will be run with a specified number of random combination of these parameters (currently set to 59).
+
+##Input data, and splitting data into train/test
+Once the data is read in, it is split into training and testing. Modeling is run on training data (using CV/bootstrapping and parameter sweeping), and evaluated on the test data.
+```{r Read in model parameters from yaml file, message=FALSE, warning=FALSE, echo=FALSE}
+yamlFile <- file.choose()
+print (paste0("Yaml file loc: ", yamlFile));
+```
+<hr>
+<br>
+
+```{r Read and process data from SQL Source, message=FALSE, warning=FALSE, echo=FALSE}
+# Get data and split train/test 
+config = yaml.load_file(yamlFile)
+
+description = eval(parse(text=config$InputData[1]));
+trainTestSplitFraction = eval(parse(text=config$InputData[2]));
+
+## If RData is specified, load R data
+loadRData = eval(parse(text=config$RDataSource[1]));
+if (loadRData == TRUE) { 
+  RDatafileLoc = eval(parse(text=config$RDataSource[2]));
+  load(RDatafileLoc);
+}
+
+## Alternatively, if SQL data source is specified, pull data from SQL source
+loadSQLData = eval(parse(text=config$SQLSource[1]));
+if (loadSQLData == TRUE) { 
+  server = eval(parse(text=config$SQLSource[2]))
+  database = eval(parse(text=config$SQLSource[3]))
+  username = eval(parse(text=config$SQLSource[4]))
+  password = eval(parse(text=config$SQLSource[5]))
+  windriver = eval(parse(text=config$SQLSource[6]))
+  linuxdriver = eval(parse(text=config$SQLSource[7]))
+  query = eval(parse(text=config$SQLSource[8]))
+  driver <- ifelse(length(grep('linux',tolower(sessionInfo()$platform))) > 0,  linuxdriver, windriver);
+  
+  connStr <- paste0('driver=',driver,';server=',server,';database=',database,';Uid=',username,';Pwd=',password, sep='');
+  dbhandle <- odbcDriverConnect(connStr)
+  trainDF <- sqlQuery(dbhandle, query)
+  odbcClose(dbhandle)
+}
+
+## SELECT RELVANT COLUMNS 
+targetCol <- config$targetCol[1];
+featureColsTmp <- eval(parse(text=config$featureCols[1])); 
+if (is.null(featureColsTmp)) {featureCols <- setdiff(colnames(trainDF), targetCol)} else {featureCols = featureColsTmp}
+
+featureExclude <- eval(parse(text=config$featureCols[2])); 
+if (!is.null(featureExclude)) {featureCols = setdiff(featureCols, featureExclude)}
+
+trainDF <- trainDF [,c(targetCol,featureCols)]
+
+## CONVERT SOME COLUMNS TO FACTORS 
+factorCols <- eval(parse(text=config$factorCols[1])); 
+if (!is.null(factorCols)) {for (i in 1:length(factorCols)) { trainDF[, factorCols[i]] <- make.names(as.factor(trainDF[, factorCols[i]])) }}
+
+
+## Train test split
+inTrain = createDataPartition(as.integer(rownames(trainDF)), p = trainTestSplitFraction)$Resample1;
+trainData = trainDF[inTrain,];
+testData = trainDF[-inTrain,];
+
+print (paste0("Input data description: ", description));
+print (paste0("Train/test split percent: ", trainTestSplitFraction));
+head(trainData, 3);
+```
+
+<hr>
+
+##Model training
+###Define hyper-parameter sets for glmnet, randomForest and xgBoost
+Create the control object for cross validation and parameter sweeping. Here we can use <a href="http://www.inside-r.org/packages/cran/caret/docs/oneSE" target="_blank">OneSE</a> (one standard error) as selection function. By default, Caret's train uses 'best' model, i.e. the tuning parameters associated with the largest (or lowest for "RMSE") performance. oneSE is a rule in the spirit of the "one standard error" rule of Breiman et al. (1984), who suggest that the tuning parameter associated with the best performance may over fit. They suggest that the simplest model within one standard error of the empirically optimal model is the better choice. 
+<br><br>
+Also, for hyper-parameter sweeping, within a fixed computational time, selecting a random set of parameters (or 'random' search option) is typically a better choise than entire grid search for identifying parameter-set that will provide an optimal model, <a href="http://www.jmlr.org/papers/volume13/bergstra12a/bergstra12a.pdf" target="_blank">Bergstra and Bengio, 2012</a>. Therefore, we use a 59 point random grid sample of hyper-parameters. Choosing 59 random points from a hyper-parameter grid will guarantee with 95% confidence that one of the hyper-parameter set will provide a model with accuracy that is within top 5% of the accuracy of all the grid hyper-parameters.
+
+```{r Create parameter grids from yaml file, message=FALSE, warning=FALSE, echo=FALSE}
+# Create the control object for cross validation and hyper-parameter sweeping
+nFolds = config$nFolds[1]
+nGridstoSweep = config$nGridstoSweep[1]
+sweepStrategy = config$sweepStrategy[1]
+modelSelectionFunction = config$modelSelectionFunction[1]
+evaluationMetric = config$evaluationMetric[1]
+controlObject <- trainControl (method = sweepStrategy, number = nFolds, selectionFunction = modelSelectionFunction, search = "grid");
+
+# Get glmnet parameters and create parameter grid
+runGlmnet <- eval(parse(text=config$glmnetParams[1]));
+if (runGlmnet == TRUE) {
+  glmnetParamsAlpha <- eval(parse(text=config$glmnetParams[2]));
+  glmnetParamsLambda <- eval(parse(text=config$glmnetParams[3]));
+  eGrid <- expand.grid(.alpha = glmnetParamsAlpha, .lambda = glmnetParamsLambda);
+  num_glmnetGrid <- min(nrow(eGrid), nGridstoSweep)
+  set.seed(123)
+  eGrid <- eGrid[sample(as.numeric(rownames(eGrid)), num_glmnetGrid),]
+  glmnetStandardize <- eval(parse(text=config$glmnetParams[4]));
+  glmnetFamily <- eval(parse(text=config$glmnetParams[5]));
+}
+
+# Get randomForest parameters and create parameter grid
+runRf <- eval(parse(text=config$rfParams[1]));
+if (runRf == TRUE)  {
+  mtryMultiplier <- eval(parse(text=config$rfParams[2]));
+  mtryCenter <- ceiling(sqrt(ncol(trainData)-1));
+  mtrySeqeunce <- unique(ceiling(mtryCenter*mtryMultiplier));
+  rfGrid <- expand.grid(.mtry = mtrySeqeunce);
+  num_rfGrid <- min(nrow(rfGrid), nGridstoSweep);
+  set.seed(123)
+  rfGrid <- data.frame(rfGrid[sample(as.numeric(rownames(rfGrid)), num_rfGrid),]); colnames(rfGrid) <- '.mtry';
+  rf_nTree = eval(parse(text=config$rfParams[3]));
+  rf_nodeSize = eval(parse(text=config$rfParams[4]));
+}
+
+# Get xgBoost parameters and create parameter grid
+runXgBoost <- eval(parse(text=config$xgBoostParams[1]));
+if (runXgBoost == TRUE) {
+  nrounds <- eval(parse(text=config$xgBoostParams[2]));
+  eta <- eval(parse(text=config$xgBoostParams[3]));
+  max_depth <- eval(parse(text=config$xgBoostParams[4]));
+  gamma <- eval(parse(text=config$xgBoostParams[5]));
+  colsample_bytree <- eval(parse(text=config$xgBoostParams[6]));
+  min_child_weight <- eval(parse(text=config$xgBoostParams[7]));
+  xgBoostObjective <- eval(parse(text=config$xgBoostParams[8])); 
+  xgBoostGrid = expand.grid(.nrounds = nrounds, .eta = eta, .max_depth = max_depth, .gamma = gamma, .colsample_bytree = colsample_bytree, .min_child_weight = min_child_weight);
+  n_xgBoostgrid <- min(nrow(xgBoostGrid), nGridstoSweep);
+  set.seed(123)
+  xgBoostGrid <- xgBoostGrid[sample(as.numeric(rownames(xgBoostGrid)), n_xgBoostgrid),]
+}
+```
+
+```{r Construct trainFormula, message=FALSE, warning=FALSE, echo=FALSE}
+features <- featureCols[1];
+for (f in 2:length(featureCols)) {features <- paste(features, '+', featureCols[f])} 
+trainFormula <- as.formula(paste(targetCol, "~", features));
+```
+
+###Define train formula based on target and features in parameters file
+```{r Print trainFormula, message=FALSE, warning=FALSE, echo=FALSE}
+print (trainFormula)
+```
+
+###Train glmnet, randomForest, and xgBoost with parameter sweeping
+```{r Train models, message=FALSE, warning=FALSE, echo=FALSE}
+# Fit glmnet model
+if (runGlmnet == TRUE) {
+  netFit <- train(trainFormula, data = trainData, family = glmnetFamily, method = "glmnet", standardize = glmnetStandardize, tuneGrid = eGrid,  trControl = controlObject, metric = evaluationMetric); 
+  print (paste0("Train GlmNet Model: ", runGlmnet));
+}
+
+# Fit randomForest model
+if (runRf == TRUE)  {
+  rfFit <- train (trainFormula, data = trainData, method = 'rf', ntree = rf_nTree, nodesize = rf_nodeSize, importance = TRUE, tuneGrid = rfGrid, trControl = controlObject, metric = evaluationMetric);
+  print (paste0("Train RandomForest Model: ", runRf));
+}
+
+# Fit xgBoost model
+if (runXgBoost == TRUE) {
+  xgBTreeFit = train(trainFormula, data = trainData,  method = "xgbTree", trControl = controlObject, tuneGrid = xgBoostGrid, objective = xgBoostObjective, metric = evaluationMetric)
+  print (paste0("Train xgBoost Model: ", runXgBoost));
+}
+```
+<hr>
+
+##Model evaluation: Compare model accuracies of different algorithms, and examine variable importance
+###Plot accuracy in test data vs. alogrithms
+```{r Compare model accuracy, message=FALSE, warning=FALSE, fig.width=8, fig.height=4, echo=FALSE}
+if (runGlmnet == TRUE &  runRf == TRUE & runXgBoost == TRUE) {allResamples <- resamples(list("glm-net" = netFit, "randomForest" = rfFit, "xgboost" = xgBTreeFit))} else if (runGlmnet == TRUE &  runRf == TRUE) {allResamples <- resamples(list("glm-net" = netFit, "randomForest" = rfFit))} else if (runGlmnet == TRUE &  runXgBoost == TRUE) {allResamples <- resamples(list("glm-net" = netFit, "xgboost" = xgBTreeFit))} else if (runRf == TRUE &  runXgBoost == TRUE) {allResamples <- resamples(list("randomForest" = rfFit, "xgboost" = xgBTreeFit))} else if (runGlmnet == TRUE) {allResamples <- resamples(list("glm-net" = netFit))} else if (runRf == TRUE) {allResamples <- resamples(list("randomForest" = rfFit))} else if (runXgBoost == TRUE) {allResamples <- resamples(list("xgboost" = xgBTreeFit))}
+
+p1 <- bwplot(allResamples, metric='RMSE', col='darkred', fill='lightblue', main = 'RMSE vs. Algos', height=200, width=200)
+p2 <- bwplot(allResamples, metric='Rsquared', col='darkred', fill='gold', main = 'R-squared vs. Algos', height=200, width=200)
+grid.arrange(p1,p2, ncol=2)
+```
+
+
+###Visualize scatterplot of actual vs. predicted values in the <b>test data</b> from different models
+```{r Visualize actual vs. predicted values in training data, message=FALSE, warning=FALSE, fig.width=10, fig.height=4, echo=FALSE}
+# Get predictions from models
+predictions <- data.frame(testData[,targetCol]); colnames(predictions) <- targetCol;
+
+par(mfrow = c(1, 3))  
+# Create scatterplot for actual vs. glmnet predictions
+if (runGlmnet == TRUE) {
+  predictions$glmnet <- predict(netFit, testData, type='raw');
+  glm.plot <- plot(predictions[,targetCol], predictions$glmnet, xlab='Actual', ylab='Predicted', col=rgb(10,100,10,50,maxColorValue=255), pch=16, cex=1, main ='glmnet', cex.main=1, cex.lab=1, cex.axis = 1);
+  legend("bottomright", inset = 0.01, legend=paste0("R2: ", round(R2(predictions[,targetCol], predictions$glmnet),2)), cex=1, box.lty=0)
+}
+# Create scatterplot for actual vs. randomForest predictions
+if (runRf == TRUE) {
+  predictions$rf <- predict(rfFit, testData, type='raw');
+  rf.plot <- plot(predictions[,targetCol], predictions$rf, xlab='Actual', ylab='Predicted', col=rgb(10,100,10,50, maxColorValue=255), pch=16, cex=1, main ='randomForest', cex.main=1, cex.lab=1, cex.axis = 1);
+  legend("bottomright", inset = 0.01, legend=paste0("R2: ", round(R2(predictions[,targetCol], predictions$rf),2)), cex=1, box.lty=0)
+}
+# Create scatterplot for actual vs. xgboost predictions
+if (runXgBoost == TRUE) {
+  predictions$xgb <- predict(xgBTreeFit, testData, type='raw');
+  xgb.plot <- plot(predictions[,targetCol], predictions$xgb, xlab='Actual', ylab='Predicted', col=rgb(10,100,10,50,maxColorValue=255), pch=16, cex=1, main ='xgboost', cex.main=1, cex.lab=1, cex.axis = 1);
+  legend("bottomright", inset = 0.01, legend=paste0("R2: ", round(R2(predictions[,targetCol], predictions$xgb),2)), cex=1, box.lty=0)
+}
+```
+
+
+
+
+
+###Variable importance: Plot top 20 relative variable importances for different models
+```{r Variable importance, message=FALSE, warning=FALSE, fig.width=12, fig.height=6, echo=FALSE}
+if (runGlmnet == TRUE) {vI <- varImp(object=netFit, useModel = TRUE, scale=TRUE);  p1 <- plot(vI, main = "glmNet", xlab='Relative Importance', ylab = 'Feature', top=10);}
+if (runRf == TRUE) {vI <- varImp(object=rfFit, useModel = TRUE, scale=TRUE); p2 <- plot(vI, main = "randomForest", xlab='Relative Importance', ylab = 'Feature', top=10);}
+if (runXgBoost == TRUE) {vI <- varImp(object=xgBTreeFit, useModel = TRUE, scale=TRUE); p3 <- plot(vI, main = "xgBoost", xlab='Relative Importance', ylab = 'Feature', top=10);}
+
+if (runGlmnet == TRUE &  runRf == TRUE & runXgBoost == TRUE) {grid.arrange(p1,p2,p3, ncol=3)} else if (runGlmnet == TRUE &  runRf == TRUE) {grid.arrange(p1,p2, ncol=2)} else if (runGlmnet == TRUE &  runXgBoost == TRUE) {grid.arrange(p1,p3, ncol=2)} else if (runRf == TRUE &  runXgBoost == TRUE) {grid.arrange(p2,p3, ncol=2)} else if (runGlmnet == TRUE) {p1} else if (runRf == TRUE) {p2} else if (runXgBoost == TRUE) {p3}
+```
+
+
+<hr>
+
+
+##Summary
+Here we perform preliminary exploration of 3 algorithms with limited CV and parameter grid sweeping and compare the accuracy of the models in the test data. Based on these explorations, user may decide to use a limited number of algorithms for creating models with extensive parameters sweeping and evaluating those models in the test data-set. Users may modify the code to explore according to the needs of their data-sets or based on their experience with <a href="https://topepo.github.io/caret/modelList.html" target="_blank">other algorithms</a> available for use through Caret. The top 2-3 approaches could be taken for further model development and testing using the test data-set. Also, there are many alternative ways to run the algorithms, besides caret, and compare the results.
+
+

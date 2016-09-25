@@ -1,0 +1,52 @@
+InputData:
+    - 'Description = "UCI Adult Census & Income Binary Classification Dataset"'
+    - 'trainTestSplitFraction = 0.75'
+RDataSource:
+    - 'loadRData = TRUE'
+    - 'RDataLoc = "C:\\Users\\remoteuser\\Source\\Repos\\DGADSCommonUtilities\\Data\\Common\\UCI_Income\\UCIIncome.RData"'
+SQLSource:
+    - 'loadSQLData = FALSE'
+    - 'Server = "<yourServer>.database.windows.net"'
+    - 'Database = "<yourDB>"'
+    - 'Username = "<yourUsername>"'
+    - 'Password = "<yourPassword>"'
+    - 'WindowsDriver = "ODBC Driver 11 for SQL Server"'
+    - 'LinuxDriver = "ODBC Driver 13 for SQL Server"'
+    - 'Query = ""'
+targetCol:
+    - "income"
+featureCols:
+    - 'include = NULL'
+    - 'exclude = NULL'
+factorCols:
+    - 'factorCols = c("income","type_employer","education","marital","occupation","relationship","race","sex","country")'
+nFolds:
+    - 3
+nGridstoSweep:
+    - 59
+sweepStrategy:
+    - "cv"
+modelSelectionFunction:
+    - "oneSE"
+evaluationMetric:
+    - "ROC"
+glmnetParams:
+    - 'runModel = TRUE'
+    - 'alpha = c(0.1, 0.5, 0.9)'
+    - 'lambda = c(0.001, 0.01, 0.1, 1)'
+    - 'standardize = TRUE'
+    - 'family = "binomial"'
+rfParams:
+    - 'runModel = TRUE'
+    - 'mtryMultiplier = c(0.5, 0.66, 1, 1.5, 2)'
+    - 'nTree = 25'
+    - 'nodeSize = 100'
+xgBoostParams:
+    - 'runModel = TRUE'
+    - 'nrounds = c(25, 50)'
+    - 'eta = c(0.01, 0.025, 0.05, 0.1, 0.5, 1)'
+    - 'max_depth = c(2,4,6)'
+    - 'gamma = c(1, 2, 5)'
+    - 'colsample_bytree = c(0.5, 0.75, 1)'
+    - 'min_child_weight = c(10, 50, 100)'
+    - 'objective = "binary:logistic"'
