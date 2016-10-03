@@ -15,7 +15,7 @@
 
 #### IDEAR:
 
-- Support of data sources in local plain text files, and in SQL (including SQL Server, and SQL Data Warehouse.
+- Support of data sources in local plain text files, and in SQL (including SQL Server, and SQL Data Warehouse).
 - Support of data exploration for regression and classification tasks, based on the type of the target variable. Case is also supported if no target variable is specified in the YAML file, where the task is identified as data exploration. 
 - Automatically detect the type of variables, if not specified in the YAML file.
 - Print out the top k rows of the data, and the shape of the data.
@@ -42,4 +42,4 @@
 
 ### Other Resources:
 
-We presented TDSP at Microsoft Data Science Summit on 9/27/2016. [Data Science Doesn’t Just Happen, It Takes a Process. Learn about Ours…](https://channel9.msdn.com/Events/Machine-Learning-and-Data-Sciences-Conference/Data-Science-Summit-2016/MSDSS23)
+We presented TDSP at Microsoft Data Science Summit on 9/27/2016: [Data Science Doesn’t Just Happen, It Takes a Process. Learn about Ours…](https://channel9.msdn.com/Events/Machine-Learning-and-Data-Sciences-Conference/Data-Science-Summit-2016/MSDSS23)
