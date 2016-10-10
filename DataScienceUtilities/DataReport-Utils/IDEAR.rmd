@@ -68,26 +68,35 @@ if(is.null(config$DataSource) || config$DataSource == 'local'){
 
 # detect data types
 isNumerical = sapply(data, is.numeric)
-isCategorical = sapply(data,function(x)length(unique(na.omit(x)))<=nrow(data)/50000||length(unique(na.omit(x)))<=5)
+isCategorical = sapply(data,function(x)length(unique(na.omit(x)))<=nrow(data)/500||length(unique(na.omit(x)))<=5)
 isNumerical = isNumerical & !isCategorical
 colNames = colnames(data)
 
-if(is.null(config$CategoricalColumns)){
-  config$CategoricalColumns = colNames[isCategorical[colNames] == TRUE]
-} else {
+# override auto-detected isCategorical with the specified categorical variables in yaml
+if(!is.null(config$CategoricalColumns)){
   config$CategoricalColumns = make.names(config$CategoricalColumns, unique=TRUE)
+  for(v in config$CategoricalCoumns){
+    isCategorical[v] = TRUE;
+    isNumerical[v] = FALSE;
+  }
 }
+# override auto-detected isNumerical with the specified numerical variables in yaml
+if(!is.null(config$NumericalColumns)){
+  config$NumericalColumns = make.names(config$NumericalColumns, unique = TRUE)
+  for(v in config$NumericalColumns){
+    isNumerical[v] = TRUE;
+    isCategorical[v] = FALSE;
+    }
+}
+
+# populate config$CategoricalColumns and config$NumericalColumns with detected and specified variables
+config$CategoricalColumns = colNames[isCategorical[colNames] == TRUE]
+config$NumericalColumns = colNames[isNumerical[colNames] == TRUE]
 
 for(v in config$CategoricalColumns)
 {
-  data[,v] = as.factor(data[,v])
-}
-
-if(is.null(config$NumericalColumns)){
-  config$NumericalColumns = colNames[isNumerical[colNames] == TRUE]
-} else {
-  config$NumericalColumns = make.names(config$NumericalColumns, unique = TRUE)
-}
+   data[,v] = as.factor(data[,v])
+}  
 
 # exclude columns from the report
 if(!is.null(config$ColumnsToExclude)){
@@ -95,7 +104,7 @@ if(!is.null(config$ColumnsToExclude)){
   config$NumericalColumns = config$NumericalColumns[!config$NumericalColumns %in% config$ColumnsToExclude]
 }
 
-# missing value replacement
+# replace missing values
 if(!is.null(config$MissingValueReplaceWith)){
   missingValueReplacement = config$MissingValueReplaceWith
 } else {
@@ -111,8 +120,8 @@ if(is.null(config$Target)){
   taskType='classification'
 }
 
-new_yaml_file = paste(substr(yaml_file, 1, nchar(yaml_file)-5),'_updated.yaml',sep='')
 # write updated yaml
+new_yaml_file = paste(substr(yaml_file, 1, nchar(yaml_file)-5),'_updated.yaml',sep='')
 write(as.yaml(config), new_yaml_file)
 
 code = "
@@ -163,26 +172,35 @@ if(is.null(config$DataSource) || config$DataSource == 'local'){
 
 # detect data types
 isNumerical = sapply(data, is.numeric)
-isCategorical = sapply(data,function(x)length(unique(na.omit(x)))<=nrow(data)/50000||length(unique(na.omit(x)))<=5)
+isCategorical = sapply(data,function(x)length(unique(na.omit(x)))<=nrow(data)/500||length(unique(na.omit(x)))<=5)
 isNumerical = isNumerical & !isCategorical
 colNames = colnames(data)
 
-if(is.null(config$CategoricalColumns)){
-  config$CategoricalColumns = colNames[isCategorical[colNames] == TRUE]
-} else {
+# override auto-detected isCategorical with the specified categorical variables in yaml
+if(!is.null(config$CategoricalColumns)){
   config$CategoricalColumns = make.names(config$CategoricalColumns, unique=TRUE)
+  for(v in config$CategoricalCoumns){
+    isCategorical[v] = TRUE;
+    isNumerical[v] = FALSE;
+  }
 }
+# override auto-detected isNumerical with the specified numerical variables in yaml
+if(!is.null(config$NumericalColumns)){
+  config$NumericalColumns = make.names(config$NumericalColumns, unique = TRUE)
+  for(v in config$NumericalColumns){
+    isNumerical[v] = TRUE;
+    isCategorical[v] = FALSE;
+    }
+}
+
+# populate config$CategoricalColumns and config$NumericalColumns with detected and specified variables
+config$CategoricalColumns = colNames[isCategorical[colNames] == TRUE]
+config$NumericalColumns = colNames[isNumerical[colNames] == TRUE]
 
 for(v in config$CategoricalColumns)
 {
-  data[,v] = as.factor(data[,v])
-}
-
-if(is.null(config$NumericalColumns)){
-  config$NumericalColumns = colNames[isNumerical[colNames] == TRUE]
-} else {
-  config$NumericalColumns = make.names(config$NumericalColumns, unique = TRUE)
-}
+   data[,v] = as.factor(data[,v])
+} 
 
 # exclude columns from the report
 if(!is.null(config$ColumnsToExclude)){
@@ -190,7 +208,7 @@ if(!is.null(config$ColumnsToExclude)){
   config$NumericalColumns = config$NumericalColumns[!config$NumericalColumns %in% config$ColumnsToExclude]
 }
 
-# missing value replacement
+# replace missing values
 if(!is.null(config$MissingValueReplaceWith)){
   missingValueReplacement = config$MissingValueReplaceWith
 } else {
@@ -205,7 +223,6 @@ if(is.null(config$Target)){
 } else {
   taskType='classification'
 }
-
 
 #' # Task Summary
 #+ echo=FALSE
@@ -326,9 +343,6 @@ dim
     r = "
 #' ## Types of columns
 #+ echo=FALSE
- # cast some columns as factors
- data[, config$CategoricalColumns] = lapply(data[,config$CategoricalColumns], factor)
- 
 # get the data type of each column
  Column_Type = sapply(data, class)
  Column_Type = lapply(Column_Type, function(x) paste(x, collapse=' '))
@@ -675,17 +689,16 @@ shinyApp(
     
     
   } else{
-    
-    cor = cor(data[,input$variable], data[,config$NumericalColumns], method = 'pearson')
-    cor=cor[1,]
-    names(cor) = config$NumericalColumns
-    cor = subset( cor, names(cor) != input$variable)
-    cor_s = cor*cor
-    names(cor_s) = names(cor)
-    cor_s = sort(cor_s, decreasing = TRUE)
-    barplot(head(cor_s, input$top_num), xlab = 'R-squared (squared correlation)', beside=TRUE, main = paste('Top', length(head(cor_s, input$top_num)), 'Associated Numerical Variables'), las=2)
-    
-    
+    if(length(config$NumericalColumns)>=2){
+      cor = cor(data[,input$variable], data[,config$NumericalColumns], method = 'pearson')
+      cor=cor[1,]
+      names(cor) = config$NumericalColumns
+      cor = subset( cor, names(cor) != input$variable)
+      cor_s = cor*cor
+      names(cor_s) = names(cor)
+      cor_s = sort(cor_s, decreasing = TRUE)
+      barplot(head(cor_s, input$top_num), xlab = 'R-squared (squared correlation)', beside=TRUE, main = paste('Top', length(head(cor_s, input$top_num)), 'Associated Numerical Variables'), las=2)
+    }
     
     aov_v <- foreach(i=1:length(config$CategoricalColumns), .export=c('config', 'data'), .packages=c('DescTools'), .combine='c') %dopar%
     {
