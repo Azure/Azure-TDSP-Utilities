@@ -97,6 +97,9 @@ if (loadSQLData == TRUE) {
   odbcClose(dbhandle)
 }
 
+## Replace missing values with 0
+trainDF[is.na(trainDF)] <- 0
+
 ## SELECT RELVANT COLUMNS 
 targetCol <- config$targetCol[1];
 featureColsTmp <- eval(parse(text=config$featureCols[1])); 
