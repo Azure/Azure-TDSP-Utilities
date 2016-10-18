@@ -397,7 +397,7 @@ summary(data)
 
 ```
 
-# Dive deeper into each indivisual variables
+# Dive deeper into each individual variable
 
 ## More detailed statistics of each variable
 
@@ -415,7 +415,7 @@ summary(data)
    server = function(input, output) {
 
     r = "
-#' # Dive deeper into each indivisual variables
+#' # Dive deeper into each individual variable
 #' ## More detailed statistics of each variable
 #+ echo=FALSE
  library(Hmisc)
@@ -458,7 +458,7 @@ shinyApp(
   server = function(input, output) {
     
    r = "
-#' # Dive deeper into each indivisual variables
+#' # Dive deeper into each individual variable
 #' ## Visualize the target variable
 #+ echo=FALSE
 
