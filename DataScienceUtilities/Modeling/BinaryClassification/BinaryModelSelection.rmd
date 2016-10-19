@@ -265,7 +265,7 @@ if (runXgBoost == TRUE) {
 
 
 
-###Variable importance: Plot top 20 relative variable importances for different models
+###Variable importance: Plot top 10 relative variable importances for different models
 ```{r Variable importance, message=FALSE, warning=FALSE, fig.width=12, fig.height=6, echo=FALSE}
 if (runGlmnet == TRUE) {vI <- varImp(object=netFit, useModel = TRUE, scale=TRUE);  p1 <- plot(vI, main = "glmNet", xlab='Relative Importance', ylab = 'Feature', top=10);}
 if (runRf == TRUE) {vI <- varImp(object=rfFit, useModel = TRUE, scale=TRUE); p2 <- plot(vI, main = "randomForest", xlab='Relative Importance', ylab = 'Feature', top=10);}
