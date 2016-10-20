@@ -210,7 +210,7 @@ The output HTML file has 6 sections.
 
 ### Feature importance
 
-**Section 5.3** contains information about relative feature importance of the models produced by the run. Relative importance (x-axis) of the top 20 features (y axis) are shown for each model. 
+**Section 5.3** contains information about relative feature importance of the models produced by the run. Relative importance (x-axis) of the top 10 features (y axis) are shown for each model. 
 
 ![7](./media/team-data-science-process-automated-modeling-reporting-instructions/modeling_7.png)
 
