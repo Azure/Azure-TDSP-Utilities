@@ -23,7 +23,7 @@ This R Markdown performs <b>exploratory</b> model training and evaluation for <b
 #rmarkdown::render("BinaryModelSelection.rmd")
 options(warn=-1)
 options(repos='http://cran.rstudio.com/')
-list.of.packages <- c('glmnet', 'yaml', 'randomForest', 'xgboost', 'lattice', 'shiny', 'gridExtra','lme4','pROC','ROCR','RODBC','rminer')
+list.of.packages <- c('glmnet', 'yaml', 'randomForest', 'xgboost', 'lattice', 'shiny', 'gridExtra','lme4','pROC','ROCR','RODBC','rminer','doSNOW')
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,'Package'])]
 if(length(new.packages))
   install.packages(new.packages)
@@ -54,7 +54,8 @@ library(pROC)
 library(ROCR)
 library(RODBC)
 library(rminer)
-source("https://raw.githubusercontent.com/tobigithub/R-parallel/gh-pages/R/code-setups/Install-doSNOW-parallel-DeLuxe.R")
+library(doSNOW)
+#source("https://raw.githubusercontent.com/tobigithub/R-parallel/gh-pages/R/code-setups/Install-doSNOW-parallel-DeLuxe.R")
 ```
 
 ##Specify YAML parameter file for input data and modeling
@@ -62,7 +63,6 @@ Specify the file which contins the parameter set to train the ML models with. If
 
 ```{r Read in model parameters from yaml file, message=FALSE, warning=FALSE, echo=FALSE}
 yamlFile <- file.choose()
-#yamlFile = "C:\\Users\\remoteuser\\Source\\Repos\\DGADSGeneralRepo\\Code\\Utilities\\Modeling\\BinaryClassification\\BinaryClassification.yaml";
 print (paste0("Yaml file loc: ", yamlFile));
 ```
 <hr>
