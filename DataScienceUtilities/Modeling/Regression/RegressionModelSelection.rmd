@@ -23,7 +23,7 @@ This R Markdown performs <b>exploratory</b> model training and evaluation for <b
 #rmarkdown::render("RegressionModelSelection.rmd")
 options(warn=-1)
 options(repos='http://cran.rstudio.com/')
-list.of.packages <- c('glmnet', 'yaml', 'randomForest', 'xgboost', 'lattice', 'shiny', 'gridExtra','lme4','RODBC','rminer')
+list.of.packages <- c('glmnet', 'yaml', 'randomForest', 'xgboost', 'lattice', 'shiny', 'gridExtra','lme4','RODBC','rminer', 'dpSNOW')
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,'Package'])]
 if(length(new.packages))
   install.packages(new.packages)
@@ -52,7 +52,8 @@ library(lattice)
 library(gridExtra)
 library(rminer)
 library(caret)
-source("https://raw.githubusercontent.com/tobigithub/R-parallel/gh-pages/R/code-setups/Install-doSNOW-parallel-DeLuxe.R")
+library(doSNOW)
+#source("https://raw.githubusercontent.com/tobigithub/R-parallel/gh-pages/R/code-setups/Install-doSNOW-parallel-DeLuxe.R")
 ```
 
 ##Specify YAML parameter file for input data and modeling
