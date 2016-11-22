@@ -23,7 +23,7 @@ This R Markdown performs <b>exploratory</b> model training and evaluation for <b
 #rmarkdown::render("BinaryModelSelection.rmd")
 options(warn=-1)
 options(repos='http://cran.rstudio.com/')
-list.of.packages <- c('glmnet', 'yaml', 'randomForest', 'xgboost', 'lattice', 'shiny', 'gridExtra','lme4','pROC','ROCR','RODBC')
+list.of.packages <- c('glmnet', 'yaml', 'randomForest', 'xgboost', 'lattice', 'shiny', 'gridExtra','lme4','pROC','ROCR','RODBC','rminer')
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,'Package'])]
 if(length(new.packages))
   install.packages(new.packages)
@@ -53,6 +53,8 @@ library(caret)
 library(pROC)
 library(ROCR)
 library(RODBC)
+library(rminer)
+source("https://raw.githubusercontent.com/tobigithub/R-parallel/gh-pages/R/code-setups/Install-doSNOW-parallel-DeLuxe.R")
 ```
 
 ##Specify YAML parameter file for input data and modeling
@@ -178,8 +180,9 @@ if (runXgBoost == TRUE) {
   gamma <- eval(parse(text=config$xgBoostParams[5]));
   colsample_bytree <- eval(parse(text=config$xgBoostParams[6]));
   min_child_weight <- eval(parse(text=config$xgBoostParams[7]));
-  xgBoostObjective <- eval(parse(text=config$xgBoostParams[8])); 
-  xgBoostGrid = expand.grid(.nrounds = nrounds, .eta = eta, .max_depth = max_depth, .gamma = gamma, .colsample_bytree = colsample_bytree, .min_child_weight = min_child_weight);
+  xgBoostsubsample <- eval(parse(text=config$xgBoostParams[8]));
+  xgBoostObjective <- eval(parse(text=config$xgBoostParams[9]));
+  xgBoostGrid = expand.grid(.nrounds = nrounds, .eta = eta, .max_depth = max_depth, .gamma = gamma, .colsample_bytree = colsample_bytree, .min_child_weight = min_child_weight, .subsample = xgBoostsubsample);
   n_xgBoostgrid <- min(nrow(xgBoostGrid), nGridstoSweep);
   set.seed(123)
   xgBoostGrid <- xgBoostGrid[sample(as.numeric(rownames(xgBoostGrid)), n_xgBoostgrid),]
