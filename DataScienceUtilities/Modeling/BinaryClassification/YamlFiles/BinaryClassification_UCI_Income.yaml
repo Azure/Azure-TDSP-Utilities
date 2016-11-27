@@ -3,7 +3,7 @@ InputData:
     - 'trainTestSplitFraction = 0.75'
 RDataSource:
     - 'loadRData = TRUE'
-    - 'RDataLoc = "C:\\Users\\remoteuser\\GitRepos\\TDSPExternal1\\Azure-TDSP-Utilities\\Data\\Common\\UCI_Income\\UCIIncome.RData"'
+    - 'RDataLoc = "..\\..\\..\\Data\\Common\\UCI_Income\\UCIIncome.RData"'
 SQLSource:
     - 'loadSQLData = FALSE'
     - 'Server = "<yourServer>.database.windows.net"'
