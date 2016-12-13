@@ -75,7 +75,7 @@ colNames = colnames(data)
 # override auto-detected isCategorical with the specified categorical variables in yaml
 if(!is.null(config$CategoricalColumns)){
   config$CategoricalColumns = make.names(config$CategoricalColumns, unique=TRUE)
-  for(v in config$CategoricalCoumns){
+  for(v in config$CategoricalColumns){
     isCategorical[v] = TRUE;
     isNumerical[v] = FALSE;
   }
