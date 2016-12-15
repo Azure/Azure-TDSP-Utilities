@@ -32,7 +32,7 @@ This report can provide a quick assessment on the quality of the feature set, th
 
 ## General information and conventions
 
-Currently, the tool only works on data frames in memory. It has been tested in both Linux and Windows systems. 
+Currently, the tool only works on data frames in memory. The utility reads in a data-frame into memory and starts the modeling process. The training data-frame will have to be saved as "trainDF" prior to using it with this utility. It has been tested in both Linux and Windows systems. 
 
 A YAML file is needed as input to specify the following:
 
