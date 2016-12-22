@@ -306,7 +306,7 @@ Then, you need to upload the IDEAR_Report.ipynb to your Jupyter Notebook home di
 
 ![final-report](./media/final-report.png)
 
-If you want to export the report, in Jupyter notebook, ***click File->Download as***. You can save to formats such as pdf, md, and html.
+If you want to export the report, in Jupyter notebook, click ***File->Download as***. You can save to formats such as pdf, md, and html.
 
 ![save-final-report](./media/save.png)
 
