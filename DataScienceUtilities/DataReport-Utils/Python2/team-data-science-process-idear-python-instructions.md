@@ -41,16 +41,16 @@ Before you run IDEAR in Jupyter Notebook (Python 2.7), make sure that the **colu
 
 ### IDEAR in Jupyter Notebook (Python 2.7) works on data frames in memory
 
-Currently, IDEAR in Jupyter Notebook (Python 2.7) only works on data that can be loaded into Python as a Pandas data frame. If you have data that is too large to fit in to the Python workspace, you may need to sample the data before running IDEAR on it. 
+Currently, IDEAR in Jupyter Notebook (Python 2.7) only works on data that can be loaded into Python as a Pandas data frame. If you have data that is too large to fit into the Python workspace, you may need to sample the data before running IDEAR on it. 
 
 
 ### Use a YAML file to provide data source, data format, and column information to IDEAR
 
 A YAML file is needed to provide information about the data, such as the location of the data, the format of the data file (such as column separator and whether there is a headerline or not), and various other parameters IDEAR needs.
 
->[AZURE.NOTE]: In the YAML file, you need to set the path to your data file correctly. The path should be an absolute path, or a path relative to the path where this instruction stays. Note that Windows and Linux have different conventions for directory structures (“\\” for Windows and “/” for Linux). So, based on the OS of your machine, you need to set the path appropriately.
+>[AZURE.NOTE]: In the YAML file, you need to set the path to your data file correctly. The path should be an absolute path, or a path relative to the path of [Run-IDEAR.R](Run-IDEAR.R). Note that Windows and Linux have different conventions for directory structures (“\\” for Windows and “/” for Linux). So, based on the OS of your machine, you need to set the path appropriately.
 
-The following two tables list the parameters you need to fill in the YAML file, depending on where the data is. We currently support only two types of data files:
+The following two tables list the parameters you need to set in the YAML file, depending on where the data is. We currently support two types of data files:
 
 - Data that is in a local flat text file
 - Data that is a query result from a SQL Server database.
@@ -85,16 +85,16 @@ If the data is the result of a SQL query of a SQL database, you do not need the 
 
 During interactive data exploration, you can:
 
-- choose which **variables** to explore and visualize. 
+- choose which variable to explore and visualize. 
 - export interesting results with **EXPORT** button.
 - generate a final report of your data exploration by clicking the **Generate Final Report** button. 
 
 
 ## Sample Dataset
 
-To help you try IDEAR in Jupyter Notebook (Python 2.7) quickly, two sample datasets come packaged with IDEAR in the **Data\\Common** directory.  
+To help you try IDEAR in Jupyter Notebook (Python 2.7) quickly, two sample datasets come packaged with IDEAR in directory [Data\\Common]( ..\\..\\..\\Data\\Common\\).  
 
-In this tutorial, we show you how to run IDEAR in Jupyter Notebook (Python 2.7) using the [UCI Census Income](https://archive.ics.uci.edu/ml/datasets/Census+Income) dataset as an example. The data is located at **Data\\Common\\UCI_Income** directory. The [para-adult.yaml](para-adult.yaml) file for this dataset is in the same directory as this instruction. 
+In this tutorial, we show how to run IDEAR in Jupyter Notebook (Python 2.7) using the [UCI Census Income](https://archive.ics.uci.edu/ml/datasets/Census+Income) dataset as an example. The data is located in directory [Data\\Common\\UCI_Income](..\\..\\..\\Data\\Common\\UCI_Income). The [para-adult.yaml](para-adult.yaml) file for this dataset is also provided. 
 
 In the following example, **label_IsOver50**K (the income is over 50K) is specified as the target (dependent) variable in the YAML file.
 
