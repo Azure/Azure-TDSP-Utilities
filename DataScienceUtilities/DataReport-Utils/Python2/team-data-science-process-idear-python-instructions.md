@@ -69,7 +69,6 @@ An example YAML file can be found at [para-bike-rental-hour.yaml](para-bike-rent
 |CategoricalColumns | Names of categorical columns | **Optional**. If not provided, IDEAR automatically detects the column type. | - gender |
 |NumericalColumns | Names of numerical columns | **Optional**. If not provided, IDEAR automatically detects the column type. | - education_years |
 |ColumnsToExclude | Names of columns to exclude | **Optional**. If not provided, IDEAR analyzes all columns. | - UserID |
-|RLogFilePath | Path and name of an R file to be created | **Required**. Path and name of an R file to hold the R scripts that a user export from the IDEAR interactive user interface. This file executes to generate the data report. | fraud.log.r |
 
 ** Data is a query result from a SQL database: **
 
@@ -87,8 +86,8 @@ If the data is the result of a SQL query of a SQL database, you do not need the 
 During interactive data exploration, you can:
 
 - choose which **variables** to explore and visualize. 
-- export an R script that generates interesting results in IDEAR to an **R script log file** with the click of a button.
-- generate a final report on the results of your data exploration by clicking the **Generate Report** button to execute the R script log file. 
+- export interesting results with **EXPORT** button.
+- generate a final report of your data exploration by clicking the **Generate Final Report** button. 
 
 
 ## Sample Dataset
