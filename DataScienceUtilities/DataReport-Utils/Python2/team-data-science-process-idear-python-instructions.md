@@ -92,9 +92,9 @@ During interactive data exploration, you can:
 
 ## Sample Dataset
 
-To help you try IDEAR in Jupyter Notebook (Python 2.7) quickly, two sample datasets come packaged with IDEAR in directory [Data\\Common]( ..\\..\\..\\Data\\Common\\).  
+To help you try IDEAR in Jupyter Notebook (Python 2.7) quickly, two sample datasets come packaged with IDEAR in directory [Data\\Common]( ../../../Data/Common/).  
 
-In this tutorial, we show how to run IDEAR in Jupyter Notebook (Python 2.7) using the [UCI Census Income](https://archive.ics.uci.edu/ml/datasets/Census+Income) dataset as an example. The data is located in directory [Data\\Common\\UCI_Income](..\\..\\..\\Data\\Common\\UCI_Income). The [para-adult.yaml](para-adult.yaml) file for this dataset is also provided. 
+In this tutorial, we show how to run IDEAR in Jupyter Notebook (Python 2.7) using the [UCI Census Income](https://archive.ics.uci.edu/ml/datasets/Census+Income) dataset as an example. The data is located in directory [Data\\Common\\UCI_Income](../../../Data/Common/UCI_Income). The [para-adult.yaml](para-adult.yaml) file for this dataset is also provided. 
 
 In the following example, **label_IsOver50**K (the income is over 50K) is specified as the target (dependent) variable in the YAML file.
 
