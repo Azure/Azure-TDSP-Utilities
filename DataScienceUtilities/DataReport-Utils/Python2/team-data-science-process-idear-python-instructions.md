@@ -311,4 +311,4 @@ If you want to export the report, in Jupyter notebook, ***click File->Download a
 
 ![save-final-report](./media/save.png)
 
-If you are using a source control platform to manage the artifacts of your data science project, we recommended that you check the generate data report into the platform as well. With the support of source control, the data analysis report can be versioned, shared, and collaborated upon by multiple parties. The report provides a 360 view of your dataset, summarizes insights from fundamental analysis, and helps guide following steps such as feature engineering and model building. 
+If you are using a source control platform to manage the artifacts of your data science project, we recommend that you check the generated data report into the platform as well. With the support of source control, the data analysis report can be versioned, shared, and collaborated upon by multiple parties. The report provides a 360 view of your dataset, summarizes insights from fundamental analysis, and helps guide following steps such as feature engineering and model building. 
