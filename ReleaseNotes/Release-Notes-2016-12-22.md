@@ -19,7 +19,7 @@
 
 * IDEAR in Jupyter Notebooks (Python 2.7). Python users can get interactive data exploration, analysis, visualization, and reporting capabilities similar to IDEAR in R. 
 * Automatic datetime fields featurization in IDEAR in R. This feature extract datetime components automatically from user-specified datetime columns, such as year, month, day, day of week etc. The extracted datetime component columns are added to the right of the original dataset for analysis and explore. If the data source is local file, the augmented dataset is automatically saved in the same directory of the original data file, with a different file name. 
-* In IDEAR in R, when visualizing individual categorical variables, levels of the categorical variable categorical are ordered in the descending order of frequencies in the piechart. 
+* In IDEAR in R, when visualizing individual categorical variables, levels of the categorical variable are ordered in the descending order of frequencies in the piechart. 
 
 **Enhanced features**
 
