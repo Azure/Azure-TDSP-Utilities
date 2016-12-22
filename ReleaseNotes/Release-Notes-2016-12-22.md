@@ -7,7 +7,7 @@
 * [Interactive Data Exploration, Analysis, and Reporting (IDEAR) in Jupyter Notebooks (Python 2.7)](../DataScienceUtilities/DataReport-Utils/Python2)
 * Interactive Data Exploration, Analysis, and Reporting (IDEAR) in R with New and Enhanced Features
 
-**Released version**
+**Version of release**
 
 * 0.11
 
@@ -18,12 +18,12 @@
 **New features**
 
 * IDEAR in Jupyter Notebooks (Python 2.7). Python users can get interactive data exploration, analysis, visualization, and reporting capabilities similar to IDEAR in R. 
-* Automatic datetime fields featurization in IDEAR in R. This feature extract datetime components automatically from user-specified datetime columns, such as year, month, day, day of week etc. The extracted datetime component columns are added to the right of the original dataset for analysis and explore. If the data source is local file, the augmented dataset is automatically saved in the same directory of the original data file, with a different file name. 
-* In IDEAR in R, when visualizing individual categorical variables, levels of the categorical variable are ordered in the descending order of frequencies in the piechart. 
+* Automatic datetime fields featurization in IDEAR in R. This feature automatically extracts datetime components such as year, month, day, and day of week from user-specified datetime columns. The extracted datetime components are added as extra columns in the original dataset for analysis and explore. If the data source is local file, the augmented dataset is saved in the same directory of the original data file.
 
 **Enhanced features**
 
-* Updated the generated html report file path to make it work in R Tools for Visual Studio (RTVS)
+* Updated pie chart visualization. In IDEAR in R, when visualizing individual categorical variables in piechart, the pie slices are ordered by the frequencies of the categorical variable levels.
+* Updated the generated html report file path to make it work in R Tools for Visual Studio ([RTVS](http://microsoft.github.io/RTVS-docs/))
 * Unified coding style in IDEAR in R.
 * Adopted change requests in pull requests from data science community.
 
