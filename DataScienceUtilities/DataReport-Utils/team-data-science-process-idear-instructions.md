@@ -134,9 +134,10 @@ You can launch IDEAR from RStudio (run on either Linux or Windows) or Visual Stu
 	![2](./media/team-data-science-process-idear-instructions/idear-dqreport-2.png)
 
 
-### 2. Visual Studio R Project
+### 2. Visual Studio with RTVS
 
 - Start Visual Studio
+- Set your system default internet browser to Chrome or Firefox
 - Configure R environment and Shiny browser with R Tools->Options->R Tools->Advanced
 	- set R Engine (64-bit) to your R installation path
 	- set Shiny pages browser to External
