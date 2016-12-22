@@ -1,0 +1,28 @@
+DataFilePath:
+    ..\\..\\..\\Data\\Common\\UCI_Bike_Rental\\hour.csv
+HasHeader:
+    Yes
+Separator:
+    ','
+Target:
+    cnt
+ColumnsToExclude:
+    instant
+NumericalColumns:
+    - temp
+    - atemp
+    - hum
+    - windspeed
+    - cnt
+CategoricalColumns:
+    - dteday
+    - season
+    - yr
+    - mnth
+    - hr
+    - holiday
+    - weekday
+    - workingday
+    - weathersit
+    - casual
+    - registered

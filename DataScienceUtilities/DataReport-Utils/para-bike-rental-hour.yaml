@@ -6,6 +6,8 @@ Separator:
     ','
 Target:
     cnt
+DateTimeColumns:
+    dteday: "%Y-%m-%d"
 ColumnsToExclude:
     instant
 RLogFilePath:

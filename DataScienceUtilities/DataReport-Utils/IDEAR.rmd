@@ -27,7 +27,7 @@ options(warn=-1)
 
 # install required packages
 options(repos='http://cran.rstudio.com/')
-list.of.packages <- c('Hmisc', 'psych', 'corrgram', 'yaml', 'entropy', 'vcd', 'shiny', 'corrplot', 'scatterplot3d', 'DescTools', 'xtable', 'shinyjs', 'RODBC','parallel','doSNOW','foreach', 'dplyr')
+list.of.packages <- c('Hmisc', 'psych', 'corrgram', 'yaml', 'entropy', 'vcd', 'shiny', 'corrplot', 'scatterplot3d', 'DescTools', 'xtable', 'shinyjs', 'RODBC','parallel','doSNOW','foreach', 'dplyr', 'lubridate')
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,'Package'])]
 if(length(new.packages))
   install.packages(new.packages)
@@ -55,73 +55,172 @@ if (OS_type == 'windows'){
   print('Please input the path to the .yaml file.')
 }
 yaml_file <- file.choose()
-config = yaml.load_file(yaml_file)
+config <- yaml.load_file(yaml_file)
 
 # data source
 if(is.null(config$DataSource) || config$DataSource == 'local'){
-  data = read.csv(config$DataFilePath, header = config$HasHeader, sep =  config$Separator)
+  data <- read.csv(config$DataFilePath, header = config$HasHeader, sep =  config$Separator)
 } else {
-  dbhandle <- odbcDriverConnect(paste('driver={ODBC Driver 11 for SQL Server};server=',config$Server,';database=',config$Database,';Uid=',config$Username,';Pwd=',config$Password, sep=''))
+  dbhandle <- odbcDriverConnect(paste0('driver={ODBC Driver 11 for SQL Server};server=',config$Server,';database=',config$Database,';Uid=',config$Username,';Pwd=',config$Password))
   data <- sqlQuery(dbhandle, config$Query)
   odbcClose(dbhandle)
 }
 
+# add datetime columns
+library(lubridate)
+
+autogen_datetime_columns <- character()
+if(!is.null(config$DateTimeColumns)){
+  for (dt in names(config$DateTimeColumns)) {
+    data[[dt]] <- as.POSIXct(data[[dt]], format = config$DateTimeColumns[[dt]])
+    
+    new_col_name <- paste0(dt, '_autogen_year')
+    data[[new_col_name]] <- year(data[[dt]])
+    if (length(unique(na.omit(data[[new_col_name]]))) == 1){
+      data[[new_col_name]] <- NULL
+    } else{
+      autogen_datetime_columns <- c(autogen_datetime_columns, new_col_name)
+    }
+    
+
+    new_col_name <- paste0(dt, '_autogen_month')
+    data[[new_col_name]] <- month(data[[dt]]) 
+    if (length(unique(na.omit(data[[new_col_name]]))) == 1){
+      data[[new_col_name]] <- NULL
+    } else{
+      autogen_datetime_columns <- c(autogen_datetime_columns, new_col_name)
+    }
+    
+    new_col_name <- paste0(dt, '_autogen_week')
+    data[[new_col_name]] <- week(data[[dt]])
+    if (length(unique(na.omit(data[[new_col_name]]))) == 1){
+      data[[new_col_name]] <- NULL
+    } else{
+      autogen_datetime_columns <- c(autogen_datetime_columns, new_col_name)
+    }
+    
+    new_col_name <- paste0(dt, '_autogen_day')
+    data[[new_col_name]] <- day(data[[dt]])
+    if (length(unique(na.omit(data[[new_col_name]]))) == 1){
+      data[[new_col_name]] <- NULL
+    } else{
+      autogen_datetime_columns <- c(autogen_datetime_columns, new_col_name)
+    }
+    
+    new_col_name <- paste0(dt, '_autogen_wday')
+    data[[new_col_name]] <- wday(data[[dt]])
+    if (length(unique(na.omit(data[[new_col_name]]))) == 1){
+      data[[new_col_name]] <- NULL
+    } else{
+      autogen_datetime_columns <- c(autogen_datetime_columns, new_col_name)
+    }
+    
+    new_col_name <- paste0(dt, '_autogen_hour')
+    data[[new_col_name]] <- hour(data[[dt]])
+    if (length(unique(na.omit(data[[new_col_name]]))) == 1){
+      data[[new_col_name]] <- NULL
+    } else{
+      autogen_datetime_columns <- c(autogen_datetime_columns, new_col_name)
+    }
+    
+    new_col_name <- paste0(dt, '_autogen_minute')
+    data[[new_col_name]] <- minute(data[[dt]])
+    if (length(unique(na.omit(data[[new_col_name]]))) == 1){
+      data[[new_col_name]] <- NULL
+    } else{
+      autogen_datetime_columns <- c(autogen_datetime_columns, new_col_name) 
+    }
+    
+    new_col_name <- paste0(dt, '_autogen_second')
+    data[[new_col_name]] <- second(data[[dt]])
+    if (length(unique(na.omit(data[[new_col_name]]))) == 1){
+      data[[new_col_name]] <- NULL
+    } else{
+      autogen_datetime_columns <- c(autogen_datetime_columns, new_col_name)
+    }
+    config$ColumnsToExclude <- c(config$ColumnsToExclude, dt)
+  }
+}
+
+
+# Add datetime components to conf$CategoricalColumns
+CategoricalColumns <- config$CategoricalColumns
+config$CategoricalColumns <- c(config$CategoricalColumns, autogen_datetime_columns)
+
 # detect data types
-isNumerical = sapply(data, is.numeric)
-isCategorical = sapply(data,function(x)length(unique(na.omit(x)))<=nrow(data)/500||length(unique(na.omit(x)))<=5)
-isNumerical = isNumerical & !isCategorical
-colNames = colnames(data)
+isNumerical <- sapply(data, is.numeric)
+isCategorical <- sapply(data, function(x)length(unique(na.omit(x))) <= nrow(data)/500||length(unique(na.omit(x))) <= 5)
+isNumerical <- isNumerical & !isCategorical
+colNames <- colnames(data)
 
 # override auto-detected isCategorical with the specified categorical variables in yaml
 if(!is.null(config$CategoricalColumns)){
-  config$CategoricalColumns = make.names(config$CategoricalColumns, unique=TRUE)
+  config$CategoricalColumns <- make.names(config$CategoricalColumns, unique=TRUE)
   for(v in config$CategoricalColumns){
-    isCategorical[v] = TRUE;
-    isNumerical[v] = FALSE;
+    isCategorical[v] <- TRUE
+    isNumerical[v] <- FALSE
   }
 }
 # override auto-detected isNumerical with the specified numerical variables in yaml
 if(!is.null(config$NumericalColumns)){
-  config$NumericalColumns = make.names(config$NumericalColumns, unique = TRUE)
+  config$NumericalColumns <- make.names(config$NumericalColumns, unique = TRUE)
   for(v in config$NumericalColumns){
-    isNumerical[v] = TRUE;
-    isCategorical[v] = FALSE;
+    isNumerical[v] <- TRUE
+    isCategorical[v] <- FALSE
     }
 }
 
 # populate config$CategoricalColumns and config$NumericalColumns with detected and specified variables
-config$CategoricalColumns = colNames[isCategorical[colNames] == TRUE]
-config$NumericalColumns = colNames[isNumerical[colNames] == TRUE]
+config$CategoricalColumns <- colNames[isCategorical[colNames] == TRUE]
+config$NumericalColumns <- colNames[isNumerical[colNames] == TRUE]
 
 for(v in config$CategoricalColumns)
 {
-   data[,v] = as.factor(data[,v])
+   data[,v] <- as.factor(data[,v])
 }  
-
+  
 # exclude columns from the report
 if(!is.null(config$ColumnsToExclude)){
-  config$CategoricalColumns = config$CategoricalColumns[!config$CategoricalColumns %in% config$ColumnsToExclude]
-  config$NumericalColumns = config$NumericalColumns[!config$NumericalColumns %in% config$ColumnsToExclude]
+  config$CategoricalColumns <- config$CategoricalColumns[!config$CategoricalColumns %in% config$ColumnsToExclude]
+  config$NumericalColumns <- config$NumericalColumns[!config$NumericalColumns %in% config$ColumnsToExclude]
 }
 
 # replace missing values
 if(!is.null(config$MissingValueReplaceWith)){
-  missingValueReplacement = config$MissingValueReplaceWith
+  missingValueReplacement <- config$MissingValueReplaceWith
 } else {
-  missingValueReplacement = 0
+  missingValueReplacement <- 0
 }
 
 # detect task type
 if(is.null(config$Target)){
-  taskType = 'data_exploration'
+  taskType <- 'data_exploration'
 } else if(isCategorical[config$Target]==FALSE){
-  taskType='regression'
+  taskType <- 'regression'
 } else {
-  taskType='classification'
+  taskType <- 'classification'
 }
 
+# Remove the DateTimeColumns field from the updated YAML file 
+config$DateTimeColumns <- NULL
+
 # write updated yaml
-new_yaml_file = paste(substr(yaml_file, 1, nchar(yaml_file)-5),'_updated.yaml',sep='')
+if((!is.null(config$DataSource)) && config$DataSource != 'local'){ 
+  # if data source is not local file, do not add datetime components into yaml file.
+  config$CategoricalColumns <- CategoricalColumns
+}
+  
+config$ColumnsToExclude <- c(config$ColumnsToExclude, names(config$DateTimeColumns))
+# output the augmented dataset
+if((is.null(config$DataSource) || config$DataSource == 'local') && length(autogen_datetime_columns) > 0){
+  library(tools)
+  extension <- file_ext(config$DataFilePath)
+  path_basename <- file_path_sans_ext(config$DataFilePath)
+  augmented_filename <- paste(path_basename, '_dt_components', '.', extension, sep='')
+  write.table(data, file = augmented_filename,row.names=FALSE, na="", sep=config$Separator, quote=FALSE)
+  config$DataFilePath <- augmented_filename
+}
+new_yaml_file <- paste0(substr(yaml_file, 1, nchar(yaml_file)-5),'_updated.yaml')
 write(as.yaml(config), new_yaml_file)
 
 code = "
@@ -158,70 +257,151 @@ library(RODBC)
 library(foreach)
 
 # yaml
-yaml_file = yaml_file_location
-config = yaml.load_file(yaml_file)
+yaml_file <- yaml_file_location
+config <- yaml.load_file(yaml_file)
 
 # data source
 if(is.null(config$DataSource) || config$DataSource == 'local'){
-  data = read.csv(config$DataFilePath, header = config$HasHeader, sep =  config$Separator)
+  data <- read.csv(config$DataFilePath, header = config$HasHeader, sep =  config$Separator)
 } else {
-  dbhandle <- odbcDriverConnect(paste('driver={ODBC Driver 11 for SQL Server};server=',config$Server,';database=',config$Database,';Uid=',config$Username,';Pwd=',config$Password, sep=''))
+  dbhandle <- odbcDriverConnect(paste0('driver={ODBC Driver 11 for SQL Server};server=',config$Server,';database=',config$Database,';Uid=',config$Username,';Pwd=',config$Password))
   data <- sqlQuery(dbhandle, config$Query)
   odbcClose(dbhandle)
 }
 
+# add datetime columns
+library(lubridate)
+
+autogen_datetime_columns <- character()
+if(!is.null(config$DateTimeColumns)){
+  for (dt in names(config$DateTimeColumns)) {
+    data[[dt]] <- as.POSIXct(data[[dt]], format = config$DateTimeColumns[[dt]])
+    
+    new_col_name <- paste0(dt, '_autogen_year')
+    data[[new_col_name]] <- year(data[[dt]])
+    if (length(unique(na.omit(data[[new_col_name]]))) == 1){
+      data[[new_col_name]] <- NULL
+    } else{
+      autogen_datetime_columns <- c(autogen_datetime_columns, new_col_name)
+    }
+    
+
+    new_col_name <- paste0(dt, '_autogen_month')
+    data[[new_col_name]] <- month(data[[dt]]) 
+    if (length(unique(na.omit(data[[new_col_name]]))) == 1){
+      data[[new_col_name]] <- NULL
+    } else{
+      autogen_datetime_columns <- c(autogen_datetime_columns, new_col_name)
+    }
+    
+    new_col_name <- paste0(dt, '_autogen_week')
+    data[[new_col_name]] <- week(data[[dt]])
+    if (length(unique(na.omit(data[[new_col_name]]))) == 1){
+      data[[new_col_name]] <- NULL
+    } else{
+      autogen_datetime_columns <- c(autogen_datetime_columns, new_col_name)
+    }
+    
+    new_col_name <- paste0(dt, '_autogen_day')
+    data[[new_col_name]] <- day(data[[dt]])
+    if (length(unique(na.omit(data[[new_col_name]]))) == 1){
+      data[[new_col_name]] <- NULL
+    } else{
+      autogen_datetime_columns <- c(autogen_datetime_columns, new_col_name)
+    }
+    
+    new_col_name <- paste0(dt, '_autogen_wday')
+    data[[new_col_name]] <- wday(data[[dt]])
+    if (length(unique(na.omit(data[[new_col_name]]))) == 1){
+      data[[new_col_name]] <- NULL
+    } else{
+      autogen_datetime_columns <- c(autogen_datetime_columns, new_col_name)
+    }
+    
+    new_col_name <- paste0(dt, '_autogen_hour')
+    data[[new_col_name]] <- hour(data[[dt]])
+    if (length(unique(na.omit(data[[new_col_name]]))) == 1){
+      data[[new_col_name]] <- NULL
+    } else{
+      autogen_datetime_columns <- c(autogen_datetime_columns, new_col_name)
+    }
+    
+    new_col_name <- paste0(dt, '_autogen_minute')
+    data[[new_col_name]] <- minute(data[[dt]])
+    if (length(unique(na.omit(data[[new_col_name]]))) == 1){
+      data[[new_col_name]] <- NULL
+    } else{
+      autogen_datetime_columns <- c(autogen_datetime_columns, new_col_name) 
+    }
+    
+    new_col_name <- paste0(dt, '_autogen_second')
+    data[[new_col_name]] <- second(data[[dt]])
+    if (length(unique(na.omit(data[[new_col_name]]))) == 1){
+      data[[new_col_name]] <- NULL
+    } else{
+      autogen_datetime_columns <- c(autogen_datetime_columns, new_col_name)
+    }
+    config$ColumnsToExclude <- c(config$ColumnsToExclude, dt)
+  }
+}
+
+# Add datetime components to conf$CategoricalColumns
+CategoricalColumns <- config$CategoricalColumns
+config$CategoricalColumns <- c(config$CategoricalColumns, autogen_datetime_columns)
+
 # detect data types
-isNumerical = sapply(data, is.numeric)
-isCategorical = sapply(data,function(x)length(unique(na.omit(x)))<=nrow(data)/500||length(unique(na.omit(x)))<=5)
-isNumerical = isNumerical & !isCategorical
-colNames = colnames(data)
+isNumerical <- sapply(data, is.numeric)
+isCategorical <- sapply(data,function(x)length(unique(na.omit(x)))<=nrow(data)/500||length(unique(na.omit(x)))<=5)
+isNumerical <- isNumerical & !isCategorical
+colNames <- colnames(data)
 
 # override auto-detected isCategorical with the specified categorical variables in yaml
 if(!is.null(config$CategoricalColumns)){
-  config$CategoricalColumns = make.names(config$CategoricalColumns, unique=TRUE)
+  config$CategoricalColumns <- make.names(config$CategoricalColumns, unique=TRUE)
   for(v in config$CategoricalCoumns){
-    isCategorical[v] = TRUE;
-    isNumerical[v] = FALSE;
+    isCategorical[v] <- TRUE
+    isNumerical[v] <- FALSE
   }
 }
 # override auto-detected isNumerical with the specified numerical variables in yaml
 if(!is.null(config$NumericalColumns)){
-  config$NumericalColumns = make.names(config$NumericalColumns, unique = TRUE)
+  config$NumericalColumns <- make.names(config$NumericalColumns, unique = TRUE)
   for(v in config$NumericalColumns){
-    isNumerical[v] = TRUE;
-    isCategorical[v] = FALSE;
+    isNumerical[v] <- TRUE
+    isCategorical[v] <- FALSE
     }
 }
 
 # populate config$CategoricalColumns and config$NumericalColumns with detected and specified variables
-config$CategoricalColumns = colNames[isCategorical[colNames] == TRUE]
-config$NumericalColumns = colNames[isNumerical[colNames] == TRUE]
+config$CategoricalColumns <- colNames[isCategorical[colNames] == TRUE]
+config$NumericalColumns <- colNames[isNumerical[colNames] == TRUE]
 
 for(v in config$CategoricalColumns)
 {
-   data[,v] = as.factor(data[,v])
+   data[,v] <- as.factor(data[,v])
 } 
+
 
 # exclude columns from the report
 if(!is.null(config$ColumnsToExclude)){
-  config$CategoricalColumns = config$CategoricalColumns[!config$CategoricalColumns %in% config$ColumnsToExclude]
-  config$NumericalColumns = config$NumericalColumns[!config$NumericalColumns %in% config$ColumnsToExclude]
+  config$CategoricalColumns <- config$CategoricalColumns[!config$CategoricalColumns %in% config$ColumnsToExclude]
+  config$NumericalColumns <- config$NumericalColumns[!config$NumericalColumns %in% config$ColumnsToExclude]
 }
 
 # replace missing values
 if(!is.null(config$MissingValueReplaceWith)){
-  missingValueReplacement = config$MissingValueReplaceWith
+  missingValueReplacement <- config$MissingValueReplaceWith
 } else {
-  missingValueReplacement = 0
+  missingValueReplacement <- 0
 }
 
 # detect task type
 if(is.null(config$Target)){
-  taskType = 'data_exploration'
+  taskType <- 'data_exploration'
 } else if(isCategorical[config$Target]==FALSE){
-  taskType='regression'
+  taskType <- 'regression'
 } else {
-  taskType='classification'
+  taskType <- 'classification'
 }
 
 #' # Task Summary
@@ -236,7 +416,7 @@ if(is.null(config$Target)){
 
 "
 
-code = gsub('yaml_file_location',paste('"',gsub('\\\\','/',new_yaml_file),'"',sep=''), code)
+code <- gsub('yaml_file_location',paste0('"',gsub('\\\\','/',new_yaml_file),'"'), code)
 write(code, file = config$RLogFilePath, append = FALSE)
 
 ```
@@ -291,7 +471,7 @@ shinyApp(
 
 ## The dimensions of the data (Rows, Columns)
 
-```{r echo = FALSE, message=FALSE, warning=FALSE}
+```{r echo = FALSE, message = FALSE, warning = FALSE}
 
  shinyApp(
  
@@ -305,8 +485,8 @@ shinyApp(
     r = "
 #' ## The dimensions of the data (Rows, Columns)
 #+ echo=FALSE
-dim = as.data.frame( t(dim(data)))
-colnames(dim) = c('Number of Rows','Number of Columns')
+dim <- as.data.frame( t(dim(data)))
+colnames(dim) <- c('Number of Rows','Number of Columns')
 dim
     "
       r_code <- reactive({
@@ -344,9 +524,9 @@ dim
 #' ## Types of columns
 #+ echo=FALSE
 # get the data type of each column
- Column_Type = sapply(data, class)
- Column_Type = lapply(Column_Type, function(x) paste(x, collapse=' '))
- column_info = cbind(Column_Name= names(Column_Type), Column_Type)
+ Column_Type <- sapply(data, class)
+ Column_Type <- lapply(Column_Type, function(x) paste(x, collapse=' '))
+ column_info <- cbind(Column_Name= names(Column_Type), Column_Type)
  rownames(column_info) <- NULL
  column_info[1:min(input$cols,nrow(column_info)),]
     "
@@ -419,7 +599,7 @@ summary(data)
 #' ## More detailed statistics of each variable
 #+ echo=FALSE
  library(Hmisc)
- desc = Hmisc::describe(as.data.frame(data))
+ desc <- Hmisc::describe(as.data.frame(data))
  desc[1:min(input$vars, length(desc))]
     "
       r_code <- reactive({
@@ -540,14 +720,14 @@ shinyApp(
   hist(data[[input$numeric]], xlab = input$numeric, main = paste('Histogram of', input$numeric))
   
   d <- density(data[[input$numeric]]) 
-  plot(d, main = paste('Density Plot of ', input$numeric))
+  plot(d, main = paste('Density Plot of', input$numeric))
   qqnorm(data[[input$numeric]], main = paste('QQ Plot of', input$numeric))
   qqline(data[[input$numeric]])
   boxplot(data[[input$numeric]], main = paste('Boxplot of', input$numeric))
-  mtext(paste('Normality test of ', input$numeric, ' ', h0, ' (p-value=', p.value, ')', sep=''), side = 3, line = -1, outer = TRUE, fontface = 'italic', col=color, size = 10)
+  mtext(paste('Normality test of', input$numeric, h0, '( p-value=', p.value, ')'), side = 3, line = -1, outer = TRUE, fontface = 'italic', col=color, size = 10)
   "
     r_code <- reactive({
-	gsub('input\\$numeric', paste("'",input$numeric,"'", sep=''), r)
+	gsub('input\\$numeric', paste0("'",input$numeric,"'"), r)
     })
     
     output$plot <- renderPlot({
@@ -586,12 +766,13 @@ shinyApp(
 #' ## Visualize the categorical variables
 #+ echo=FALSE
      # barplot and pie chart
-  par(mfrow=c(1,2)) 
+  par(mfrow=c(1,2))
+  fhist <- sort(table(data[[input$categoric]]), decreasing = TRUE)
   barplot(table(data[[input$categoric]]), main = paste('Bar Plot of', input$categoric))
-  pie(table(data[[input$categoric]]), main=paste('Pie Chart of', input$categoric))
+  pie(fhist, main=paste('Pie Chart of', input$categoric))
   "
     r_code <- reactive({
-	gsub("input\\$categoric", paste("'",input$categoric,"'", sep=''), r)
+	gsub("input\\$categoric", paste0("'",input$categoric,"'"), r)
     })
     
     output$plot <- renderPlot({
@@ -611,7 +792,7 @@ shinyApp(
 #  Investigate Multiple Variable Interactions
 
 ## Rank variables
-Rank variables (numerical and categorical) based on strengths of association with a selected variable. This helps you to understand the top dependent variables (grouped by numerical and categorical) of the selected variable.
+Rank variables (numerical and categorical) based on strengths of association with a selected variable. This helps you understand the top dependent variables (grouped by numerical and categorical) of the selected variable.
 ```{r echo = FALSE, message=FALSE, warning=FALSE}
 shinyApp(
   
@@ -634,7 +815,7 @@ shinyApp(
     if(nrow(data)>50000) {
       library(dplyr)
       set.seed(9805)
-      data = sample_n(data, min(50000, nrow(data)))
+      data <- sample_n(data, min(50000, nrow(data)))
     }
 
     library(parallel)
@@ -660,10 +841,10 @@ shinyApp(
         0
       }
     }
-    names(aov_v) = config$NumericalColumns
-    aov_v = subset(aov_v, names(aov_v)!=input$variable)
-    aov_v = sort(aov_v, decreasing = TRUE)
-    barplot(head(aov_v, input$top_num), xlab = 'Eta-squared value', beside=TRUE, main = paste('Top', length(head(aov_v, input$top_num)), 'Associated Numerical Variables'), las=2)
+    names(aov_v) <- config$NumericalColumns
+    aov_v <- subset(aov_v, names(aov_v)!=input$variable)
+    aov_v <- sort(aov_v, decreasing = TRUE)
+    barplot(head(aov_v, input$top_num), xlab = 'Eta-squared value', beside=TRUE, main = paste('Top', length(head(aov_v, input$top_num)), 'Associated Numerical Variables'), las=2, cex.axis = 0.7, space=1)
     
     
     
@@ -674,30 +855,30 @@ shinyApp(
       data[,config$CategoricalColumns[i]] <- factor(data[,config$CategoricalColumns[i]])
       if (nlevels(data[,config$CategoricalColumns[i]]) >= 2) 
       {
-        tbl = table(data[,c(input$variable, config$CategoricalColumns[i])])
-        chi2 = chisq.test(tbl, correct=F)
+        tbl <- table(data[,c(input$variable, config$CategoricalColumns[i])])
+        chi2 <- chisq.test(tbl, correct=F)
         sqrt(chi2$statistic / sum(tbl))
       } else{
         0
       }
       
     }
-    names(cramer_v) = config$CategoricalColumns
-    cramer_v = subset(cramer_v, names(cramer_v)!=input$variable)
-    cramer_v = sort(cramer_v, decreasing = TRUE)
-    barplot(head(cramer_v, input$top_cat), xlab = 'Cramer\\'s V', beside=TRUE, main = paste('Top', length(head(cramer_v, input$top_cat)), 'Associated Categorical Variables'), las=2)
+    names(cramer_v) <- config$CategoricalColumns
+    cramer_v <- subset(cramer_v, names(cramer_v)!=input$variable)
+    cramer_v <- sort(cramer_v, decreasing = TRUE)
+    barplot(head(cramer_v, input$top_cat), xlab = 'Cramer\\'s V', beside=TRUE, main = paste('Top', length(head(cramer_v, input$top_cat)), 'Associated Categorical Variables'), las=2, cex.axis = 0.7)
     
     
   } else{
     if(length(config$NumericalColumns)>=2){
-      cor = cor(data[,input$variable], data[,config$NumericalColumns], method = 'pearson')
+      cor <- cor(data[,input$variable], data[,config$NumericalColumns], method = 'pearson')
       cor=cor[1,]
-      names(cor) = config$NumericalColumns
-      cor = subset( cor, names(cor) != input$variable)
-      cor_s = cor*cor
-      names(cor_s) = names(cor)
-      cor_s = sort(cor_s, decreasing = TRUE)
-      barplot(head(cor_s, input$top_num), xlab = 'R-squared (squared correlation)', beside=TRUE, main = paste('Top', length(head(cor_s, input$top_num)), 'Associated Numerical Variables'), las=2)
+      names(cor) <- config$NumericalColumns
+      cor <- subset( cor, names(cor) != input$variable)
+      cor_s <- cor*cor
+      names(cor_s) <- names(cor)
+      cor_s <- sort(cor_s, decreasing = TRUE)
+      barplot(head(cor_s, input$top_num), xlab = 'R-squared (squared correlation)', beside=TRUE, main = paste('Top', length(head(cor_s, input$top_num)), 'Associated Numerical Variables'), las=2, cex.axis = 0.7)
     }
     
     aov_v <- foreach(i=1:length(config$CategoricalColumns), .export=c('config', 'data'), .packages=c('DescTools'), .combine='c') %dopar%
@@ -716,16 +897,16 @@ shinyApp(
       }
       
     }
-    names(aov_v) = config$CategoricalColumns
-    aov_v = subset(aov_v, names(aov_v)!=input$variable)
-    aov_v = sort(aov_v, decreasing = TRUE)
-    barplot(head(aov_v, input$top_cat), xlab = 'Eta-squared value', beside=TRUE, main = paste('Top', length(head(aov_v, input$top_cat)), 'Associated Categorical Variables'), las=2)
+    names(aov_v) <- config$CategoricalColumns
+    aov_v <- subset(aov_v, names(aov_v)!=input$variable)
+    aov_v <- sort(aov_v, decreasing = TRUE)
+    barplot(head(aov_v, input$top_cat), xlab = 'Eta-squared value', beside=TRUE, main = paste('Top', length(head(aov_v, input$top_cat)), 'Associated Categorical Variables'), las=2, cex.axis = 0.7)
   }
   stopCluster(cluster)
   "
 
     r_code <- eventReactive(input$go, {
-      r = gsub("input\\$variable", paste("'",input$variable,"'", sep=''), r)
+      r = gsub("input\\$variable", paste0("'",input$variable,"'"), r)
   	  r = gsub("input\\$top_num", input$top_num, r)
 	    gsub("input\\$top_cat", input$top_cat, r)
 	    })
@@ -768,8 +949,8 @@ shinyApp(
    "
   
     r_code <- reactive({
-      r = gsub("input\\$categoric1", paste("'",input$categoric1,"'", sep=''), r)
-      gsub("input\\$categoric2", paste("'",input$categoric2,"'", sep=''), r)
+      r = gsub("input\\$categoric1", paste0("'",input$categoric1,"'"), r)
+      gsub("input\\$categoric2", paste0("'",input$categoric2,"'"), r)
     })
     
     output$plot <- renderPlot({
@@ -806,7 +987,7 @@ shinyApp(
 #+ echo=FALSE
   par(mfrow=c(1,1)) 
   correlation <- round(cor(data[[input$numeric1]], data[[input$numeric2]]),4)
-  plot(data[[input$numeric1]], data[[input$numeric2]], xlab = input$numeric1, ylab=input$numeric2, main = paste(input$numeric1, 'VS', input$numeric2, ', correlation=', correlation, sep=''))
+  plot(data[[input$numeric1]], data[[input$numeric2]], xlab = input$numeric1, ylab=input$numeric2, main = paste(input$numeric1, 'VS', input$numeric2, 'correlation =', correlation))
   # regression line (y~x)
   abline(lm(as.formula(paste(input$numeric1,'~',input$numeric2)), data =data), col='red')  
   # lowess line (x,y) 
@@ -814,8 +995,8 @@ shinyApp(
    "
   
     r_code <- reactive({
-      r = gsub("input\\$numeric1", paste("'",input$numeric1,"'", sep=''), r)
-	    gsub("input\\$numeric2", paste("'",input$numeric2,"'", sep=''), r)
+      r = gsub("input\\$numeric1", paste0("'",input$numeric1,"'"), r)
+	    gsub("input\\$numeric2", paste0("'",input$numeric2,"'"), r)
     })
     
     output$plot <- renderPlot({
@@ -856,16 +1037,18 @@ shinyApp(
 #+ echo=FALSE
     library(corrgram)
     library(corrplot)
-    par(mfrow=c(1,1)) 
-    c = cor(data[,config$NumericalColumns], method = input$cormethod)
+    par(mfrow=c(1,1))
+    data[is.na(data)] <- missingValueReplacement
+    c <- cor(data[,config$NumericalColumns], method = input$cormethod)
+    c[is.na(c)] <- missingValueReplacement
     corrplot(c, method=input$corvismethod, order = input$cororder, insig = 'p-value',  sig.level=-1, type = input$corvistype)
     "
     
     r_code <- reactive({
-      r = gsub("input\\$cormethod", paste("'",input$cormethod,"'", sep=''), r)
-      r = gsub("input\\$cororder", paste("'",input$cororder,"'", sep=''), r)
-      r = gsub("input\\$corvismethod", paste("'",input$corvismethod,"'", sep=''), r)
-      gsub("input\\$corvistype", paste("'",input$corvistype,"'", sep=''), r)
+      r = gsub("input\\$cormethod", paste0("'",input$cormethod,"'"), r)
+      r = gsub("input\\$cororder", paste0("'",input$cororder,"'"), r)
+      r = gsub("input\\$corvismethod", paste0("'",input$corvismethod,"'"), r)
+      gsub("input\\$corvistype", paste0("'",input$corvistype,"'"), r)
     })
     output$plot <- renderPlot({
       eval(parse(text = r_code()))
@@ -880,7 +1063,7 @@ shinyApp(
 
 ```
 
-## Visualize interactions between numeric and categorical variables via box plots
+## Visualize interactions between numerical and categorical variables via box plots
 
 X axis is the level of categorical variables. This helps you to understand whether the distribution of the numeric variable is significantly different at different levels of the categorical variable. 
 
@@ -918,14 +1101,14 @@ shinyApp(
     h0 <- 'Accepted'
     color <- 'blue'
     }
-    f = as.formula(paste(input$numeric3,'~',input$categoric3))
+    f <- as.formula(paste(input$numeric3,'~',input$categoric3))
     boxplot(f, data= data, xlab = input$categoric3, ylab=input$numeric3)
-    title(main=paste('h0 ', h0, ' (p-value=', p_value, ')',sep=''), col.main=color)
+    title(main=paste('h0', h0, '( p-value=', p_value, ')'), col.main=color)
     "
     
     r_code <- reactive({
-      r = gsub("input\\$numeric3", paste("'",input$numeric3,"'", sep=''), r)
-      gsub("input\\$categoric3", paste("'",input$categoric3,"'", sep=''), r)
+      r = gsub("input\\$numeric3", paste0("'",input$numeric3,"'"), r)
+      gsub("input\\$categoric3", paste0("'",input$categoric3,"'"), r)
     })
     
     output$plot <- renderPlot({
@@ -941,7 +1124,7 @@ shinyApp(
 )
 ```
 
-## Project numeric variables to principal components, and visualize
+## Project numerical variables to principal components, and visualize
 
 ```{r echo = FALSE, message=FALSE, warning=FALSE}
 
@@ -969,9 +1152,9 @@ loadings <- x %*% sigma_eigen$vectors
 p.variance.explained <- sigma_values^2/sum_variance
 p.variance.cumsum <- cumsum(p.variance.explained)*100
 
-x = loadings[,1]
-y = loadings[,2]
-z = loadings[,3]
+x <- loadings[,1]
+y <- loadings[,2]
+z <- loadings[,3]
 num_numericvars <- length(nonConstantNames)
 
 r = "
@@ -980,7 +1163,7 @@ r = "
 if(nrow(data)>50000) {
     library(dplyr)
     set.seed(9805)
-    data = sample_n(data, min(50000, nrow(data)))
+    data <- sample_n(data, min(50000, nrow(data)))
 }
 
 library(scatterplot3d)
@@ -1038,18 +1221,18 @@ axis(4, pretty(c(0,100)), col='black',col.axis='black',las=1, axes=F)
 num_pcs_80 <- sum(p.variance.cumsum <= 80)
 num_pcs_90 <- sum(p.variance.cumsum <= 90)
 num_pcs_95 <- sum(p.variance.cumsum <= 95)
-text(num_numericvars/10*3, 80, paste('80% by ', num_pcs_80, ' pcs',sep=''))
-text(num_numericvars/10*3, 85, paste('90% by ', num_pcs_90, ' pcs',sep=''))
-text(num_numericvars/10*3, 90, paste('95% by ', num_pcs_95, ' pcs',sep=''))
+text(num_numericvars/10*3, 80, paste('80% by', num_pcs_80, 'pcs'))
+text(num_numericvars/10*3, 85, paste('90% by', num_pcs_90, 'pcs'))
+text(num_numericvars/10*3, 90, paste('95% by', num_pcs_95, 'pcs'))
 data[[input$catvar]] <- factor(data[[input$catvar]])
-plot(loadings[,as.numeric(input$xvar)], loadings[,as.numeric(input$yvar)], type='p', pch=20, col=as.numeric(data[[input$catvar]]), xlab=paste('PC', input$xvar, sep=''), ylab=paste('PC', input$yvar, sep=''))
+plot(loadings[,as.numeric(input$xvar)], loadings[,as.numeric(input$yvar)], type='p', pch=20, col=as.numeric(data[[input$catvar]]), xlab=paste('PC', input$xvar), ylab=paste('PC', input$yvar, sep=''))
 legend('topright', cex=.8,  legend = levels(data[[input$catvar]]), fill = 1:nlevels(data[[input$catvar]]), merge = F, bty = 'n')
     "
     
     r_code <- reactive({
-      r = gsub("input\\$catvar", paste("'",input$catvar,"'", sep=''), r)
-      r = gsub("input\\$xvar", paste("'",input$xvar,"'", sep=''), r)
-      gsub("input\\$yvar", paste("'",input$yvar,"'", sep=''), r)
+      r = gsub("input\\$catvar", paste0("'",input$catvar,"'"), r)
+      r = gsub("input\\$xvar", paste0("'",input$xvar,"'"), r)
+      gsub("input\\$yvar", paste0("'",input$yvar,"'"), r)
     })
     
     output$plot <- renderPlot({
@@ -1096,16 +1279,16 @@ shinyApp(
     par(mfrow=c(1,1))
     DF <- data.frame(x = x, y = y, z = z, group = data[[input$cat1]])
     # create the plot, you can be more adventurous with colour if you wish
-    s3d <- with(DF, scatterplot3d(x, y, z, xlab=paste('PC',input$pc1,sep=''), ylab=paste('PC',input$pc2,sep=''), zlab=paste('PC', input$pc3,sep=''), color = as.numeric(group), pch = 19, angle = as.numeric(input$angle)))
+    s3d <- with(DF, scatterplot3d(x, y, z, xlab=paste0('PC',input$pc1), ylab=paste0('PC',input$pc2), zlab=paste0('PC', input$pc3), color = as.numeric(group), pch = 19, angle = as.numeric(input$angle)))
     legend('topleft', cex=.8,  legend = levels(data[[input$cat1]]), fill = 1:nlevels(data[[input$cat1]]), merge = F, bty = 'n')
     "
     
     r_code <- reactive({
-      r = gsub("input\\$cat1", paste("'",input$cat1,"'", sep=''), r)
-      r = gsub("input\\$angle", paste("'",input$angle,"'", sep=''), r)
-      r = gsub("input\\$pc1", paste("'",input$pc1,"'", sep=''), r)
-      r = gsub("input\\$pc2", paste("'",input$pc2,"'", sep=''), r)
-      gsub("input\\$pc3", paste("'",input$pc3,"'", sep=''), r)
+      r = gsub("input\\$cat1", paste0("'",input$cat1,"'"), r)
+      r = gsub("input\\$angle", paste0("'",input$angle,"'"), r)
+      r = gsub("input\\$pc1", paste0("'",input$pc1,"'"), r)
+      r = gsub("input\\$pc2", paste0("'",input$pc2,"'"), r)
+      gsub("input\\$pc3", paste0("'",input$pc3,"'"), r)
     })
     
     output$plot <- renderPlot({
@@ -1147,7 +1330,7 @@ shinyApp(
       shinyjs::enable('viewReport')
     })
     observeEvent(input$viewReport, {
-      browseURL(paste(substr(config$RLogFilePath, 1, nchar(config$RLogFilePath)-1),'html',sep=''))
+      browseURL(file.path(getwd(), paste0(substr(config$RLogFilePath, 1, nchar(config$RLogFilePath)-1),'html')))
     })
     
   }
