@@ -25,9 +25,9 @@ The Interactive Data Exploration, Analysis and Reporting (IDEAR) tool provides a
 
 You need to install the following programs to use IDEAR:
 
-1. R: version 3.2.5 or above is recommended. We also tested IDEAR in both R 3.2.5 and R 3.3.1 to confirm that it works.
-2. RStudio: version 0.99.903 is recommended.
-3. If you are using a Windows client to log in to a Linux DSVM, you must [install X2Go on your client](https://azure.microsoft.com/en-us/documentation/articles/machine-learning-data-science-linux-dsvm-intro/#installing-and-configuring-x2go-client). Log in to the DSVM using X2Go. The X2Go interface appears as shown in the following figure:
+1. R: version 3.2.5 and above. We tested IDEAR in version 3.2.5, 3.3.1, and 3.3.2.
+2. RStudio: version 0.99.903 and above or Visual Studio with [RTVS](http://microsoft.github.io/RTVS-docs/).
+3. If you are using Linux DSVM on a Windows machine, you can [install X2Go on your client](https://azure.microsoft.com/en-us/documentation/articles/machine-learning-data-science-linux-dsvm-intro/#installing-and-configuring-x2go-client) to log into the Linux DSVM. The X2Go interface appears as shown in the following figure:
 
 ![0](./media/team-data-science-process-idear-instructions/idear-modeling-0.PNG)
 
@@ -74,8 +74,16 @@ An example YAML file can be found at [para-bike-rental-hour.yaml](para-bike-rent
 |Target | Name of the machine learning target column | **Optional**. If not provided, this is just a data exploration task. | is_fraud |
 |CategoricalColumns | Names of categorical columns | **Optional**. If not provided, IDEAR automatically detects the column type. | - gender |
 |NumericalColumns | Names of numerical columns | **Optional**. If not provided, IDEAR automatically detects the column type. | - education_years |
+|DateTimeColumns | Names of datetime columns | **Required** if you want to treate some columns as datetime fields. In the format of `- ColumnName: Format String`. | - Col1 : "%Y-%m-%d %H:%M:%S" | 
 |ColumnsToExclude | Names of columns to exclude | **Optional**. If not provided, IDEAR analyzes all columns. | - UserID |
 |RLogFilePath | Path and name of an R file to be created | **Required**. Path and name of an R file to hold the R scripts that a user export from the IDEAR interactive user interface. This file executes to generate the data report. | fraud.log.r |
+
+If you specify some columns as **DateTimeColumns**, IDEAR will convert these columns into **datetime** objects in R, and extract datetime componnets `Year`, `Month`, `Week Number`, `Day of Month`, `Day of Week`, `Hour of Day`, `Minute`, `Second` from these objects. These datetime component columns, if not constant, will be added to the the right side of the original dataset, and column names will be `<Original DateTime Column Name>_autogen_year`, `<Original DateTime Column Name>_autogen_month`, etc. They will be treated as categorical columns. The data exploration and analysis will be conducted on the dataset with these extra datetime component columns.
+After extracting datetime components, the original datetime columns are not needed further analysis. Therefore they are added to `ColumnsToExclude`. 
+
+If the data source is local files, IDEAR will save the augmented data with datetime component columns to a local file, in the same directory of DataFilePath, with name __dt\_components_ added to the original file name. For instance, if the original data file is _C:\\temp\\a.csv_, the augmented data will be saved as _C:\\temp\\a_dt_components.csv_. 
+
+To practice with the automatic datetime component extraction from **DateTimeColumns**, you can use the bike rental data coming with IDEAR. In the bike rental data, there is a datetime column `dteday`. When IDEAR asks you to choose a YAML file, just choose para-bike-rental-hour.yaml. 
 
 ** Data is a query result from a SQL database: **
 
@@ -108,8 +116,9 @@ In the following example, **label.IsOver50**K (the income is over 50K) is specif
 
 ## How to Launch IDEAR
 
-You launch IDEAR from RStudio (run on either Linux or Windows) selecting the YAML file for the data to explore. Here are the instructions:
+You can launch IDEAR from RStudio (run on either Linux or Windows) or Visual Studio R Project. Here are the instructions:
 
+### 1. RStudio
 - To start RStudio **on Linux**, double-click the RStudio icon on the desktop. If you do not see the icon, go to **Applications** --> **Run Program** --> type **rstudio**
 
 	![x2go](./media/team-data-science-process-idear-instructions/idear-x2go-rstudio-installed.png)
@@ -120,11 +129,30 @@ You launch IDEAR from RStudio (run on either Linux or Windows) selecting the YAM
 
 	![1](./media/team-data-science-process-idear-instructions/idear-dqreport-1.png)
 
-- To launch IDEAR, navigate to the desired YAML file (para-adult.yaml for our example) in **File Explorer** window that pops up and click **Open**.
+- To launch IDEAR, navigate to the desired YAML file (para-adult.yaml for example) in **File Explorer** window that pops up and click **Open**.
 
 	![2](./media/team-data-science-process-idear-instructions/idear-dqreport-2.png)
 
 
+### 2. Visual Studio R Project
+
+- Start Visual Studio
+- Configure R environment and Shiny browser with R Tools->Options->R Tools->Advanced
+	- set R Engine (64-bit) to your R installation path
+	- set Shiny pages browser to External
+
+	![](./media/vs_r_browser_setting.png)
+- Open Run-IDEAR.R in Visual Studio and source the R file with R Tools->Session->Source R script
+
+	![](./media/vs_source_file.png)
+
+- Click **OK** to continue when a message window pops up to remind that you need to select a YAML file in the next popup windows.
+
+	![1](./media/team-data-science-process-idear-instructions/idear-dqreport-1.png)
+
+- To launch IDEAR, navigate to the desired YAML file (para-bike-rental-hour.yaml for example) in **File Explorer** window that pops up and click **Open**.
+
+>[AZURE.ALERT] Make sure that DataFilePath in YAML file points to your data file.
 ## How to use IDEAR
 
 IDEAR guides you through the exploration of a dataset in an evolving manner:
@@ -297,4 +325,4 @@ After the report is saved, you can click **View Report** to display the report i
 
 ![22](./media/team-data-science-process-idear-instructions/idear-dqreport-22.png)
 
-If you are using some code-hosting platform to manage the artifacts of your data science project, we recommended that you check the data report into the code-hosting platform. When you check in the HTML report, you also need to check in the image files in directory ***\\<log file name without .R\>_files\\figure-html***. These image files should stay in the same ***\\<log file name without .R\>_files\\figure-html*** directory in your git repository relative to the HTML file. Otherwise, the html report won't be able to find these image files.  
+If you are using a source control platform to manage the artifacts of your data science project, we recommended that you check in the data report as well. You need to check in the image files in directory ***\\<log file name without .R\>_files\\figure-html*** along with the html. These image files should stay in the same ***\\<log file name without .R\>_files\\figure-html*** directory in your git repository relative to the HTML file. Otherwise, the html report won't be able to find these image files.  

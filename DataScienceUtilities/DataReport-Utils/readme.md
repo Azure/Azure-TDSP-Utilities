@@ -14,8 +14,7 @@ The prerequisites are
 
 To start IDEAR, 
 
-- Open script [Run-IDEAR.R](Run-IDEAR.R) in RStudio.
-- Click *Source* to run. 
+- Click *Source* to run the script [Run-IDEAR.R](Run-IDEAR.R) in RStudio. 
 - When prompted, select the YAML file which contains the dataset configurations.
 
 For details, please read [instructions](team-data-science-process-idear-instructions.md).

@@ -1,0 +1,18 @@
+DataFilePath: C:\\Git\\Utilities\\DataScienceUtilities\\DataReport-Utils\\EK_train.csv
+HasHeader: yes
+Separator: ','
+CategoricalColumns:
+- STATION_CODE
+- FLIGHT_NO
+- STD_WeekDay
+- STD_WeekNumber
+- STD_HourOfDay
+- STA_WeekDay
+- STA_WeekNumber
+- STA_HourOfDay
+NumericalColumns:
+- Delay_in_Minutes
+DateTimeColumns:
+  STD: "%Y-%m-%d %H:%M:%S"
+ColumnsToExclude: STD
+RLogFilePath: EK-train.r
