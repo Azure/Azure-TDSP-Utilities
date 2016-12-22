@@ -153,6 +153,7 @@ You can launch IDEAR from RStudio (run on either Linux or Windows) or Visual Stu
 - To launch IDEAR, navigate to the desired YAML file (para-bike-rental-hour.yaml for example) in **File Explorer** window that pops up and click **Open**.
 
 >[AZURE.ALERT] Make sure that DataFilePath in YAML file points to your data file.
+
 ## How to use IDEAR
 
 IDEAR guides you through the exploration of a dataset in an evolving manner:
