@@ -136,7 +136,7 @@ You can launch IDEAR from RStudio (run on either Linux or Windows) or Visual Stu
 
 ### 2. Visual Studio with RTVS
 
-- Start Visual Studio
+- Start Visual Studio with RTVS
 - Set your system default internet browser to Chrome or Firefox
 - Configure R environment and Shiny browser with R Tools->Options->R Tools->Advanced
 	- set R Engine (64-bit) to your R installation path
