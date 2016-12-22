@@ -23,9 +23,9 @@
 
 **Enhanced features**
 
-* Updated pie chart visualization. In IDEAR in R, when visualizing individual categorical variables in piechart, the pie slices are ordered by the frequencies of the categorical variable levels.
+* Updated pie chart visualization of individual categorical variables. In IDEAR in R, when visualizing individual categorical variables in piechart, the pie slices are ordered by the frequencies of the categorical variable levels.
 * Unified coding style in IDEAR in R.
-* Adopted change requests in pull requests from data science community.
+* Adopted change requests from data science community, including requests in **pull requests** and **issues**.
 
 **Related resources**
 
