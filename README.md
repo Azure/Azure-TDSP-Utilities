@@ -14,9 +14,9 @@ Currently, the Data Science Utilities released in this repository include:
 
 - [Interactive Data Exploration, Analysis, and Reporting (IDEAR) in R](DataScienceUtilities/DataReport-Utils/).
 - [Interactive Data Exploration, Analysis, and Reporting (IDEAR) in Jupyter Notebook (Python 2.7)](DataScienceUtilities/DataReport-Utils/Python2).
-- [Automated Modeling and Reporting in R](DataScienceUtilities/Modeling/)
+- [Automated Modeling and Reporting in R (AMAR in R)](DataScienceUtilities/Modeling/)
 
-You can easily run these utilities on sample data in the **Data/Common** directory. 
+You can easily run these utilities on sample data in the **Data/Common** directory. If you are using [Azure Data Science Virtual Machine] (https://azure.microsoft.com/en-us/marketplace/partners/microsoft-ads/standard-data-science-vm/), all three utilities are instantly ready to run. 
 
 ## Ask Questions. 
 
