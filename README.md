@@ -4,18 +4,19 @@
 
 This repository contains the **Data Science Utilities** developed by **Team Data Science Process (TDSP) from Microsoft**. 
 
-Shared data science utility is a key components of [TDSP](https://github.com/Azure/Microsoft-TDSP). Shared data science utilities can make the execution of data science projects more efficient. 
+Shared data science utility is a key component of [TDSP](https://github.com/Azure/Microsoft-TDSP). Shared data science utilities can make the execution of data science projects more efficient. 
 
 ## Release Notes
 
 This is an **early preview** release of the Data Science Utilities for TDSP. We are continuously improving our data science utilities based on our further accumulated experience, and customer requests. Stay tuned for future releases. 
 
-In this release, we are releasing two utilities in R:
+Currently, the Data Science Utilities released in this repository include:
 
-- [Interactive Data Exploration, Analysis, and Reporting (IDEAR)](DataScienceUtilities/DataReport-Utils/).
-- [Automated Modeling and Reporting](DataScienceUtilities/Modeling/)
+- [Interactive Data Exploration, Analysis, and Reporting (IDEAR) in R](DataScienceUtilities/DataReport-Utils/).
+- [Interactive Data Exploration, Analysis, and Reporting (IDEAR) in Jupyter Notebook (Python 2.7)](DataScienceUtilities/DataReport-Utils/Python2).
+- [Automated Modeling and Reporting in R](DataScienceUtilities/Modeling/)
 
-You can easily run these two utilities on sample data in the **Data/Common** directory. 
+You can easily run these utilities on sample data in the **Data/Common** directory. 
 
 ## Ask Questions. 
 
