@@ -19,36 +19,37 @@
 
 # Instructions for using Interactive Data Exploration, Analysis and Reporting (IDEAR) in Jupyter Notebook (Python 2.7)
 
-The Interactive Data Exploration, Analysis and Reporting (IDEAR) tool provides a flexible and interactive means for data exploration, visualization, analysis, and pattern recognition. These instructions provide a step-by-step guide on how to use IDEAR in Jupyter Notebook (Python 2.7) to explore and analyze sample data interactively, and then how to export the results of visualization and analysis to a report with a few clicks.
+The Interactive Data Exploration, Analysis and Reporting (IDEAR) tool enables data scientists to explore and visualize data interactively, facilitating the analysis and recognition of patterns that a data set contains. These instructions provide a step-by-step guide on using IDEAR in a Jupyter Notebook (Python 2.7) to explore and analyze sample data interactively, and also how to export the results of the visualization and analysis to a report with a few clicks.
 
 ## Prerequisites
 
-You need to install a few programs to use IDEAR in Jupyter Notebook (Python 2.7):
+The following programs are needed to use IDEAR in Jupyter Notebook (Python 2.7):
 
 1. Set up Jupyter Notebook server. Here are the [instructions](http://jupyter.readthedocs.io/en/latest/install.html). 
 2. Install the list of required Python modules in [readme.md](readme.md). 
-3. If you have [Data Science Virtual Machine](https://docs.microsoft.com/en-us/azure/machine-learning/machine-learning-data-science-provision-vm), Jupyter Notebook server is already set up for you. If you are using Linux DSVM on a Windows machine, you can [install X2Go on your client](https://azure.microsoft.com/en-us/documentation/articles/machine-learning-data-science-linux-dsvm-intro/#installing-and-configuring-x2go-client) to log into the Linux DSVM.
+3. If you have deployed a [Data Science Virtual Machine](https://docs.microsoft.com/en-us/azure/machine-learning/machine-learning-data-science-provision-vm), Jupyter Notebook server is already set up for you. If you are using a Linux DSVM on a Windows machine, you can [install X2Go on your client](https://azure.microsoft.com/en-us/documentation/articles/machine-learning-data-science-linux-dsvm-intro/#installing-and-configuring-x2go-client) to log into the Linux DSVM.
 
 ## Conventions, limitations, and the configuration of IDEAR
 
 ### Column name conventions for IDEAR in Jupyter Notebook 
 
-Before you run IDEAR in Jupyter Notebook (Python 2.7), make sure that the **column names** in the data file or in the SQL query result, take the following conventions:
+Before you run IDEAR in Jupyter Notebook (Python 2.7), make sure that the **column names** in the data file or in the SQL query result, use the following conventions:
 
 - Column names have to **start with alphabet letters**. Column names cannot start with numbers or special characters. 
-- **Special characters**, except the underscore, are **not allowed** in column names. Even a space character is not allowed in a column name.  
+- **Special characters**, except the underscore, are **not allowed** in any part of column names, nor is the **space character**.  
 
 
 ### IDEAR in Jupyter Notebook (Python 2.7) works on data frames in memory
 
-Currently, IDEAR in Jupyter Notebook (Python 2.7) only works on data that can be loaded into Python as a Pandas data frame. If you have data that is too large to fit into the Python workspace, you may need to sample the data before running IDEAR on it. 
+Currently, IDEAR in Jupyter Notebook (Python 2.7) only works with data that has been loaded into Python as a Pandas data frame. If you have data that is too large to fit into the Python workspace, you may need to sample the data before running IDEAR on it. 
 
 
 ### Use a YAML file to provide data source, data format, and column information to IDEAR
 
-A YAML file is needed to provide information about the data, such as the location of the data, the format of the data file (such as column separator and whether there is a headerline or not), and various other parameters IDEAR needs.
+A YAML file is needed to provide information about the data, such as the location of the data, the format of the data file (specifying, for example, the column separator used and whether or not there is a headerline), and various other parameters (itemized in the following tables) that IDEAR needs.
 
->[AZURE.NOTE]: In the YAML file, you need to set the path to your data file correctly. The path should be an absolute path, or a path relative to the path of [Run-IDEAR.R](Run-IDEAR.R). Note that Windows and Linux have different conventions for directory structures (“\\” for Windows and “/” for Linux). So, based on the OS of your machine, you need to set the path appropriately.
+>[!NOTE] 
+>In the YAML file, you need to set the path to your data file correctly. The path should be an absolute path, or a path relative to the path of [Run-IDEAR.R](Run-IDEAR.R). Becuse Windows and Linux have different conventions for directory structures (“\\” for Windows and “/” for Linux), the path must be set using the appropriate conventions for the OS of your machine.
 
 The following two tables list the parameters you need to set in the YAML file, depending on where the data is. We currently support two types of data files:
 
@@ -63,7 +64,7 @@ An example YAML file can be found at [para-bike-rental-hour.yaml](para-bike-rent
 | Parameter Name | Value | Description | Example |
 |:---------------|:-------------|:----------------------|:-----------------|
 |DataFilePath    | Path to the local data | **Required**. (Full or relative) path and name to the data file. Use '\\' to separate directories and file names. | ..\\..\\Data\\Common\\data.csv |
-|HasHeader | Yes or No | **Required**. Specify whether the first line is a headerline. | Yes |
+|HasHeader | Yes or No | **Required**. Specifies whether the first line is a headerline. | Yes |
 |Separator | ',', '\t', etc| **Required**. The separator of columns in the data file. | ',' |
 |Target | Name of the machine learning target column | **Optional**. If not provided, this is just a data exploration task. | is_fraud |
 |CategoricalColumns | Names of categorical columns | **Optional**. If not provided, IDEAR automatically detects the column type. | - gender |
@@ -72,7 +73,7 @@ An example YAML file can be found at [para-bike-rental-hour.yaml](para-bike-rent
 
 ** Data is a query result from a SQL database: **
 
-If the data is the result of a SQL query of a SQL database, you do not need the first three parameters in the table above. Instead, you need the following parameters:
+If the data is the result of a SQL query on a SQL database, you do not need the first three parameters in the table above. Instead, you need the following parameters:
 
 | Parameter Name | Value | Description | Example |
 |:---------------|:-------------|:----------------------|:-----------------|
@@ -92,7 +93,7 @@ During interactive data exploration, you can:
 
 ## Sample Dataset
 
-To help you try IDEAR in Jupyter Notebook (Python 2.7) quickly, two sample datasets come packaged with IDEAR in directory [Data\\Common]( ../../../Data/Common/).  
+To get you started with IDEAR in Jupyter Notebook (Python 2.7) quickly, two sample datasets come packaged with IDEAR in directory [Data\\Common]( ../../../Data/Common/).  
 
 In this tutorial, we show how to run IDEAR in Jupyter Notebook (Python 2.7) using the [UCI Census Income](https://archive.ics.uci.edu/ml/datasets/Census+Income) dataset as an example. The data is located in directory [Data\\Common\\UCI_Income](../../../Data/Common/UCI_Income). The [para-adult.yaml](para-adult.yaml) file for this dataset is also provided. 
 
@@ -101,13 +102,13 @@ In the following example, **label_IsOver50**K (the income is over 50K) is specif
 
 ## How to Launch IDEAR
 
-Here are the instructions of launching IDEAR in Jupyter Notebook (Python):
+Here are the instructions to launch IDEAR in a Jupyter Notebook (Python):
 
 - Open a browser, and log in to the Jupyter Notebook server. If you are logging in to the Jupyter Notebook server using a browser on the Jupyter Notebook server itself, typically you type in _https://localhost:9999_ to access the Jupyter Notebook server. 
 
 	![log-in](./media/log-in-jupyter-notebook.png)
 
-- Upload the IDEAR.ipynb to the Jupyter Notebook server. Locate the IDEAR.ipynb in the same directory as this instruction on the Jupyter Notebook server. Drag and drop the IDEAR.ipynb file to the Jupyter Notebook home page. Then click "Upload" to upload the IDEAR.ipynb file to the home directory of the Jupyter Notebook server. 
+- Upload the IDEAR.ipynb to the Jupyter Notebook server. Find the IDEAR.ipynb notebook that is located in the directory that contains these instruction on the Jupyter Notebook server. Drag and drop the IDEAR.ipynb file to the Jupyter Notebook home page. Then click **Upload** to upload the IDEAR.ipynb file to the home directory of the Jupyter Notebook server. 
 
 	![upload](./media/upload.png)
 
@@ -116,15 +117,15 @@ Here are the instructions of launching IDEAR in Jupyter Notebook (Python):
 	![basic-instructions](./media/basic_instructions.png)
 
 - Configure and set up IDEAR by providing some global parameters. The global parameters you need to provide include:
-	- _Working directory_: the absolute path to the directory where this instruction stays on the Jupyter Notebook server machine. You need to set the same working directory in the first two cells. 
+	- _Working directory_: the absolute path to the directory containing these instruction on the Jupyter Notebook server machine. You need to set the same working directory in the first two cells. 
 	- _YAML file_: the name and the path to the YAML file. The path can be an absolute path, or a relative path to the working directory. In this example, the _para\_adult.yaml_ is just in the working directory. So, we set `conf_file = '.\\para-adult.yaml'` 
-	- _Name of the final report_ (a Jupyter Notebook file) that you plan to generate using IDEAR. In this example, we name it as `IDEAR_Report.ipynb`.
-	- _Directory to save the temporary files_: Later on, when you use IDEAR to explore the data, you will be able to export the Python scripts that are generating the results you see in IDEAR to some temporary Jupyter Notebooks. All the Jupyter Notebooks in the directory will be merged to generate the final report. Therefore, for each dataset you are exploring using IDEAR, create a separate directory to host these temporary files. 
+	- _Name of the final report_ (a Jupyter Notebook file) that you plan to generate using IDEAR. In this example, we name it `IDEAR_Report.ipynb`.
+	- _Directory to save the temporary files_: Later on, when you use IDEAR to explore the data, you will be able to export the Python scripts that are generating the results you produce with IDEAR to some temporary Jupyter Notebooks. All the Jupyter Notebooks in the directory will be merged to generate the final report. To keep the reports for each dataset you are exploring using IDEAR, create a separate directory to host these temporary files. 
 	- _Sample_Size_: Large dataset can slow down the interactivity when you are using IDEAR. By default, we random sample the data to 10000 observations, if the original data has more than 10000 observations. IDEAR will use the entire dataset to generate the general statistics. When interactivity is needed, the sampled dataset is used. 
 
 	![configure](./media/configure.png)
 
-Then, you are all set to run IDEAR to explore and visualize your dataset!
+Now you are all set to run IDEAR to explore and visualize your dataset!
 
 
 ## How to use IDEAR
@@ -135,11 +136,11 @@ IDEAR guides you through the exploration of a dataset in an evolving manner:
 - from simple to complex
 - from single variable to multiple variables 
 
-You are recommended to run the code cells in IDEAR in an orderly manner, since some cells are depending on the outputs from previous cells. 
+It is recommended that you run the code cells in IDEAR in the order provided, since some cells depend on the outputs from previous cells. 
 
 Cells _**Global Configuration and Setting Up**_, _**Import necessary packages and set up environment parameters**_, and _**Define some functions for generating reports**_ need to run first in order to import necessary modules or define functions that are going to be used by IDEAR. 
 
-During the interactive process of data exploration, analysis, and visualization, you can click the **Export** button for each analysis and visualization. The Python scripts used to generate the results of your analysis and visualization are output/appended to some temporary Jupyter Notebooks in the directory _export\_dir_ you specified in the second code cell of the IDEAR Jupyter Notebook. You can generate a final data report from the temporary Jupyter Notebooks in this directory. Click the **Generate Final Report** button to merge all temporary Jupyter Notebooks in this directory to a single Jupyter Notebook, which you need to run in order to generate your final report. You can then share this report with your project teammates or with your clients to discuss what insights you obtained from your exploration of the data. 
+During the interactive process of data exploration, analysis, and visualization, you can click the **Export** button for each analysis and visualization. The Python scripts used to generate the results of your analysis and visualization are output/appended to some temporary Jupyter Notebooks in the directory _export\_dir_ you specified in the second code cell of the IDEAR Jupyter Notebook. You can generate a final data report from the temporary Jupyter Notebooks in this directory. Click the **Generate Final Report** button to merge all temporary Jupyter Notebooks in this directory to a single Jupyter Notebook. You can share this report with your project teammates or with your clients to discuss what insights you obtained from your exploration of the data. 
 
 ## 1. Read and Summarize the Data
 
