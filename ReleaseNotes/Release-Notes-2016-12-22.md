@@ -17,13 +17,13 @@
 
 **New features**
 
-* IDEAR in Jupyter Notebooks (Python 2.7). Python users can get interactive data exploration, analysis, visualization, and reporting capabilities similar to IDEAR in R. 
-* Automatic datetime fields featurization in IDEAR in R. This feature automatically extracts datetime components such as year, month, day, and day of week from user-specified datetime columns. The extracted datetime components are added as extra columns in the original dataset for analysis and explore. If the data source is local file, the augmented dataset is saved in the same directory of the original data file.
-* Run IDEAR in R using Visual Studio with [R Tools for Visual Studio (RTVS)](http://microsoft.github.io/RTVS-docs/). Instructions are added as part of [IDEAR in R documentation](../DataScienceUtilities/DataReport-Utils/team-data-science-process-idear-instructions.md). 
+* IDEAR in Jupyter Notebooks (Python 2.7). Python users get interactive data exploration, analysis, visualization, and reporting capabilities similar to IDEAR in R. 
+* Automatic datetime fields featurization in IDEAR in R. This feature automatically extracts datetime components such as year, month, day, and day of week from user-specified datetime columns. The extracted datetime components are added as extra columns to the original dataset for analysis and exploration. If the data source is local file, the augmented dataset is saved in the directory containing the original data file.
+* Run IDEAR in R within Visual Studio using [R Tools for Visual Studio (RTVS)](http://microsoft.github.io/RTVS-docs/). For instructions, see [IDEAR in R documentation](../DataScienceUtilities/DataReport-Utils/team-data-science-process-idear-instructions.md). 
 
 **Enhanced features**
 
-* Updated pie chart visualization of individual categorical variables. In IDEAR in R, when visualizing individual categorical variables in piechart, the pie slices are ordered by the frequencies of the categorical variable levels.
+* Pie chart visualization of individual categorical variables have been enhanced in IDEAR in R. The pie slices of categorical variables are now ordered by their frequencies in a pie chart visualization.
 * Unified coding style in IDEAR in R.
 * Adopted suggestions from data science community, including suggestions in **pull requests** and **issues**.
 
