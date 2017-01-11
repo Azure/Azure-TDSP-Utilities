@@ -13,7 +13,7 @@
 	ms.tgt_pltfrm="na"
 	ms.devlang="na"
 	ms.topic="article"
-	ms.date="12/15/2016"
+	ms.date="01/10/2017"
 	ms.author="bradsev;hangzh;"/>
 
 
@@ -79,7 +79,7 @@ If the data is the result of a SQL query on a SQL database, you do not need the 
 |:---------------|:-------------|:----------------------|:-----------------|
 |DataSource    | SQLServer | **Required**. _SQLServer_ is the only valid value for now. But this value is valid for both SQL database, and SQL Data Warehouse.| SQLServer |
 |Server | URL to the database server | **Required**. URL to the database server | mysqlserver.database.windows.net |
-|Database | Database name | **Required**. Name of the database from which to query | SQLDWTDSP |
+e|Database | Database name | **Required**. Name of the database from which to query | SQLDWTDSP |
 |Username | username | **Required**. User name that can log in to the Server to run query. | datascience |
 |Password | password of the username | **Required**. Password of the user that can log in to the Server to run query. | HelloWorld! |
 |Query | SQL query | **Required**. Query to get the data from the database. Can be query on a single or joining multiple tables.| select * from table1 |
@@ -89,7 +89,6 @@ During interactive data exploration, you can:
 - choose which variable to explore and visualize. 
 - export interesting results with **EXPORT** button.
 - generate a final report of your data exploration by clicking the **Generate Final Report** button. 
-
 
 ## Sample Dataset
 
@@ -127,7 +126,6 @@ Here are the instructions to launch IDEAR in a Jupyter Notebook (Python):
 
 Now you are all set to run IDEAR to explore and visualize your dataset!
 
-
 ## How to use IDEAR
 
 IDEAR guides you through the exploration of a dataset in an evolving manner:
@@ -137,33 +135,30 @@ IDEAR guides you through the exploration of a dataset in an evolving manner:
 - from single variable to multiple variables 
 
 It is recommended that you run the code cells in IDEAR in the order provided, since some cells depend on the outputs from previous cells. 
-
 Cells _**Global Configuration and Setting Up**_, _**Import necessary packages and set up environment parameters**_, and _**Define some functions for generating reports**_ need to run first in order to import necessary modules or define functions that are going to be used by IDEAR. 
 
-During the interactive process of data exploration, analysis, and visualization, you can click the **Export** button for each analysis and visualization. The Python scripts used to generate the results of your analysis and visualization are output/appended to some temporary Jupyter Notebooks in the directory _export\_dir_ you specified in the second code cell of the IDEAR Jupyter Notebook. You can generate a final data report from the temporary Jupyter Notebooks in this directory. Click the **Generate Final Report** button to merge all temporary Jupyter Notebooks in this directory to a single Jupyter Notebook. You can share this report with your project teammates or with your clients to discuss what insights you obtained from your exploration of the data. 
+During the interactive process of data exploration, analysis, and visualization, you can click the **Export** button for each analysis and visualization. The Python scripts used to generate the results of your analysis and visualization are output/appended to some temporary Jupyter Notebooks in the directory _export\_dir_ you specified in the second code cell of the IDEAR Jupyter Notebook. You can generate a final data report from the temporary Jupyter Notebooks in this directory. Click the **Generate Final Report** button to merge all the temporary Jupyter Notebooks in this directory to a single Jupyter Notebook. You can share this report with your project teammates or with your clients to discuss what insights you obtained from your exploration of the data. 
 
 ## 1. Read and Summarize the Data
 
-This section of cells will:
+This section of cells complete the following tasks:
 
-- Read data into Pandas data frame, and infer column types (numerical or categorical)
-- Print the first n rows of data
-- Print the dimensions, column names and types of the data
+- Reads data into Pandas data frame, and infers the column types (numerical or categorical).
+- Prints the first n rows of the data.- Prints the dimensions, column names and types of data in the data frame.
 
 ### 1.1. Read data and infer column types
 
-This cell will:
+This cell completes the following tasks:
 
-- Parse the yaml file into a dictionary
-- Read the data into a Pandas data frame, and sample the data
-- If the yaml file does not specify which columns are categorical/numerical, infer all non-numerical/numerical columns as categorical/numerical
-- Print which column is the target column, and which columns are categorical and numerical columns. 
-
+- Parses the yaml file into a dictionary.
+- Reads the data into a Pandas data frame and samples the data.
+- Infers whether the columns are categorical or numerical if the yaml file does not specify the type of data contained in the columns. 
+- Prints which column is the target column, which columns contain categorical data, and which contain numerical data. 
 ![read-data](./media/read-data.png)
 
 ### 1.2. Print the first n rows of the data
 
-This cell prints the first n (n=5 by default) of the data. Drag the scroll bar left or right will print less or more rows of data. This allows users to take a quick peek of the data. 
+This cell prints the first n (n=5 by default) of the data. Draging the scroll bar left or right prints less or more rows of data. This allows users to take a quick peek at various quantities of the data. 
 
 ![print-n-rows](./media/print-n-rows.png)
 
@@ -191,19 +186,19 @@ You need to run the following cell first in order to define functions needed for
 
 ## 3. Explore Individual Variables
 
-In this section, you will explore variables individually, including the target variable, numerical variables, and categorical variables. For numerical variables, histogram, probability density plot, QQ-plot, and box-plot will be plotted. Normality test will be conducted. For categorical variables, histogram and pie chart will be plotted. 
+In this section, you explore variables individually, including the target variable, numerical variables, and categorical variables. For numerical variables, a histogram, probability density plot, QQ-plot, and a box-plot are plotted. A normality test is also conducted. For categorical variables, a histogram and pie chart are plotted. 
 
-A drop box will be provided to allow you to select the variable you want to explore. 
+A drop box is provided that allows you to select the variable you want to explore. 
 
-Categorical column exploration will be based on the entire dataset, and numerical column exploration will be based on the sampled dataset. 
+Categorical column exploration is based on the entire dataset, and numerical column exploration is based on the sampled dataset. 
 
-If you like the exploration and visualization result on a variable to be in your final report, click the `Export` button to export the Python code behind the exploration and visualization to a temporary Jupyter Notebook file. This temporary Jupyter Notebook will be used to generate the final report later. 
+If you would like the result of an exploration and visualization on a variable to be included in your final report, click the **Export** button to export the Python code behind the exploration and visualization to a temporary Jupyter Notebook file. This temporary Jupyter Notebook will be used to generate the final report later. 
 
 ### 3.1. Explore the target variable
 
 ![explore-target](./media/explore-target.png)
 
-### 3.2. Explore individual numeric variables and test for normality (on sampled data)
+### 3.2. Explore individual numeric variables and test for normality (on the sampled data)
 
 ![explore-numerical](./media/explore-numerical.png)
 
@@ -217,7 +212,7 @@ Click the drop down list box to select another categorical variable to explore.
 
 ## 4. Explore Interactions Between Variables
 
-Investigating the interactions and association between variables is an important analysis for understanding the dataset and for determining whether a dataset is relevant for the machine learning task, even before building machine learning models. In this section, we show how to evaluate and visualize inter-variable associations and the subsections corresponds to the IDEAR panes:
+Investigating the interactions and association between variables is an important type of analysis for understanding a dataset and for determining whether a dataset is suitable for a machine learning task before actually investing in building a machine learning model. In this section, we show how to evaluate and visualize inter-variable associations. The subsections correspond to the following IDEAR panes:
 
 - 4.1 Rank variables
 - 4.2 Explore interactions between categorical variables
@@ -235,14 +230,15 @@ IDEAR calculates the strength of linear relationships between variables in the d
 
 ![rank-variables](./media/rank-variables.png)
 
->[AZURE.ALERT] If you notice that certain variables have significantly stronger associations with the target variable than others, they might be **target leakers** that already contain information from the target variable. Think it twice, or consult someone who has domain expertise if this situation arises.
+>[!ALERT] 
+> If you notice that certain variables have significantly stronger associations with the target variable than others, they might be **target leakers** that already contain information from the target variable. Consider this possibility and consult someone who has domain expertise if this situation arises.
 
 ### 4.2. Explore interactions between categorical variables
 
-A [mosaic plot](http://www.datavis.ca/online/mosaics/about.html#toc1 "two-way mosaic plot") shows the proportion of one categorical variable within the classes of another using tiles whose size is proportional to the cell frequency of a 2-way contingency table. The two categorical variables are selected from the drop-down menu boxes. The tiles are colored according to Standardized Pearson residuals (see the previous link). This helps you understand whether two categorical variables are dependent or not.
+A [mosaic plot](http://www.datavis.ca/online/mosaics/about.html#toc1 "two-way mosaic plot") shows the proportion of one categorical variable within the classes of another using tiles whose size is proportional to the cell frequency of a 2-way contingency table. The two categorical variables are selected from the drop-down menu boxes. The tiles are colored according to Standardized Pearson residuals (see the previous link). This plot helps you understand whether two categorical variables are dependent or not.
 
 If the target variable is a categorical variable, by default, Categorical Var 1 is the target variable.
-
+*
 ![interaction-categorical](./media/interaction-categorical.png)
 
 
@@ -252,12 +248,12 @@ A scatter plot shows the association between pairs of numerical variables in the
 
 If the target variable is a numerical variable, by default, Numerical Var 1 is the target variable.
 
-![interaction-numerical](./media/interaction-numerical.png)
+*![interaction-numerical](./media/interaction-numerical.png)
 
 
 ### 4.4. Explore correlation matrix between numerical variables
 
-An all-by-all pair-wise correlation plot shows the association between all pairs of numerical variables the dataset. You can choose one of the three correlation methods: pearson, kendall, and spearman. 
+An all-by-all pair-wise correlation plot shows the association between all pairs of numerical variables the dataset. You can choose one of the three correlation methods: pearson, kendall, or spearman. 
 
 ![explore-correlation](./media/explore-correlation.png)
 
@@ -265,7 +261,7 @@ An all-by-all pair-wise correlation plot shows the association between all pairs
 
 The association between a numerical and a categorical variable can be evaluated using a box plot. ANOVA is conducted to test the null hypothesis that the mean values of the numerical variable are the same across the levels of the categorical variable. The p-value of the ANOVA test is shown. If the categorical variable is the target variable for a classification problem, this function indicates whether the numerical variable helps differentiate the different levels of the target variable.
 
-If the target variable is a numerical (categorical) variable, by default, Numerical (Categorical) Variable is the target variable. 
+If the target variable is a numerical variable, then by default Numerical Variable is the target variable; if a categorical variable, then by default Categorical Variable is the target variable. 
 
 ![numerical-categorical](./media/numerical-categorical.png)
 
@@ -273,19 +269,19 @@ If the target variable is a numerical (categorical) variable, by default, Numeri
 
 A scatter plot of two numerical variables are plotted, and points are legended by the selected categorical variable. If the target variable is numerical, Numerical Var 1 is the target variable by default. If the target variable is categorical, Categorical Var is the target variable by default. 
 
-This plot helps understand whether the categorical variable can be separated by the two numerical variables. If the categorical variable is the target variable, it can help access whether these two numerical variables can differentiate the levels of the target variable. If you see clear clustering pattern, where one cluster is dominated by one single level of the target variable, that is a good indicator that these two numerical variables are good predictors. 
+This plot helps understand whether the categorical variable can be separated by the two numerical variables. If the categorical variable is the target variable, it can help determine whether these two numerical variables can differentiate the levels of the target variable. If you see a clear clustering pattern, where one cluster is dominated by one single level of the target variable, that is a good indicator that these two numerical variables are good predictors. 
 
 ![2num-1cat.png](./media/2num-1cat.png)
 
 ## 5. Visualize Numerical Data by Projecting to Principal Component Spaces
 
-When the dimension of the data is high, data visualization is challenging. But visualizing the data can help us understand the clustering pattern in the data. For classification tasks, if you see separated clusters in the data that are dominated by different classes of the target variable, you may estimate that this classification task might not be so challenging. Otherwise, the classification task might not be easy. You can also use this function to infer the quality of your feature set. 
+When the dimension of the data is high, data visualization is challenging. But visualizing the data can help us understand the clustering pattern in the data. For classification tasks, if you see separated clusters in the data that are dominated by different classes of the target variable, it is possible that this classification task might be tractable. Otherwise, the classification task might not be easy. You can also use this function to infer the quality of your feature set. 
 
-This function projects the numerical sub-dataset onto a lower 2-D or 3-D space spanned by the principal components. For 2-D projection, you can choose the principal components for x, y using the dropdown menus provided in the IDEAR pane. Changing principal components for these two axes might help reveal some clustering patterns that might be hidden when viewing in other principal component axis.  
+This function projects the numerical sub-dataset onto a lower 2-D or 3-D space spanned by the principal components. For 2-D projection, you can choose the principal components for x, y using the dropdown menus provided in the IDEAR pane. Changing principal components for these two axes might help reveal some clustering patterns that would be hidden when viewing in other principal component axis.  
 
 The bar chart of the percentage of variance explained by the number of principal components can help you understand how severe the multicollinearity is in the numerical sub-dataset. Put another way, it describes how singular the variance-covariance matrix is. 
 
-For 3-D projection, the data is simply projected to the 1st, 2nd, and 3rd principal components, as the x, y, z axis respectively. In the 3-D projection scatter plot, there is a horizontal scroll bar for you to change the viewing perspective. Some clusters might be hidden behind the others when you look at from one angle. Changing to other angles might help you reveal these hidden clusters. 
+For 3-D projection, the data is simply projected to the 1st, 2nd, and 3rd principal components, as the x, y, z axis respectively. In the 3-D projection scatter plot, there is a horizontal scroll bar for you to change the viewing perspective. Some clusters might be hidden behind others when looked at from one angle. Changing to another angles might help reveal these hidden clusters. 
 
 ![2d-pca](./media/2d-pca.png)
 
@@ -293,22 +289,22 @@ For 3-D projection, the data is simply projected to the 1st, 2nd, and 3rd princi
 
 ## 6. Show and Hide Codes in IDEAR
 
-After you have all ipywidgets show up in IDEAR, you might want to hide the source codes in the Jupyter Notebook to make it look neater. Then, you just need to play with the ipywidgets to select the variables you want to explore and the analysis you want to conduct. You can do so by running the cell _**Show/Hide the Source Code**_. Then, you can switch on and off the display of the source codes in the Jupyter Notebook by clicking the `Toggle Raw Code` button.
+After you have all ipywidgets show up in IDEAR, you might want to hide the source code in the Jupyter Notebook to make it look neater. Then, you just need to play with the ipywidgets to select the variables you want to explore and the analysis you want to conduct. You can do so by running the cell _**Show/Hide the Source Code**_. Then, you can switch on and off the display of the source codes in the Jupyter Notebook by clicking the **Toggle Raw Code** button.
  
 ![toggle-codes](./media/toggle-codes.png)
 
 ## 7. Generate the Final Report
 
-When you are ready to generate the data report, click the **Generate Final Report** button. The temporary Jupyter Notebook files are merged into a single Jupyter Notebook file IDEAR_Report.ipynb. 
+When you are ready to generate the data report, click the **Generate Final Report** button. This merges the temporary Jupyter Notebook files into a single Jupyter Notebook file called IDEAR_Report.ipynb. 
 
 ![generate-report](./media/generate-report.png)
 
-Then, you need to upload the IDEAR_Report.ipynb to your Jupyter Notebook home directory, and run the cells in order to generate the visualization and alaysis results in the final report. The final report also provides the general statistics of the data.
+Then, you need to upload the IDEAR_Report.ipynb to your Jupyter Notebook home directory, and run the cells in order to generate the visualization and alaysis results in the final report. The final report also provides the general statistics for the data.
 
 ![final-report](./media/final-report.png)
 
-If you want to export the report, in Jupyter notebook, click ***File->Download as***. You can save to formats such as pdf, md, and html.
+If you want to export the report, click ***File->Download as*** in Jupyter notebook. You can save to formats such as pdf, md, and html.
 
 ![save-final-report](./media/save.png)
 
-If you are using a source control platform to manage the artifacts of your data science project, we recommend that you check the generated data report into the platform as well. With the support of source control, the data analysis report can be versioned, shared, and collaborated upon by multiple parties. The report provides a 360 view of your dataset, summarizes insights from fundamental analysis, and helps guide following steps such as feature engineering and model building. 
+If you are using a source control platform to manage the artifacts of your data science project, we recommend that you check the generated data report into the platform as well. With the support of source control, the data analysis report can be versioned and shared by multiple collaborating parties. The report provides a 360 view of your dataset, summarizes insights from your analysis, and helps guide subsequent machine learning steps such as feature engineering and model building. 
