@@ -49,7 +49,7 @@ Currently, IDEAR in Jupyter Notebook (Python 2.7) only works with data that has 
 A YAML file is needed to provide information about the data, such as the location of the data, the format of the data file (specifying, for example, the column separator used and whether or not there is a headerline), and various other parameters (itemized in the following tables) that IDEAR needs.
 
 >[!NOTE] 
->In the YAML file, you need to set the path to your data file correctly. The path should be an absolute path, or a path relative to the path of [Run-IDEAR.R](Run-IDEAR.R). Becuse Windows and Linux have different conventions for directory structures (“\\” for Windows and “/” for Linux), the path must be set using the appropriate conventions for the OS of your machine.
+>In the YAML file, you need to set the path to your data file correctly. The path should be an absolute path, or a path relative to the working directory you are setting. Becuse Windows and Linux have different conventions for directory structures (“\\” for Windows and “/” for Linux), the path must be set using the appropriate conventions for the OS of your machine.
 
 The following two tables list the parameters you need to set in the YAML file, depending on where the data is. We currently support two types of data files:
 
