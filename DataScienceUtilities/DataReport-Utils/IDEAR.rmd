@@ -1152,9 +1152,6 @@ loadings <- x %*% sigma_eigen$vectors
 p.variance.explained <- sigma_values^2/sum_variance
 p.variance.cumsum <- cumsum(p.variance.explained)*100
 
-x <- loadings[,1]
-y <- loadings[,2]
-z <- loadings[,3]
 num_numericvars <- length(nonConstantNames)
 
 r = "
@@ -1198,7 +1195,7 @@ shinyApp(
     inputPanel(
       selectInput("catvar", label = "Color by categorical variable", choices = if(!is.null(config$Target) && isCategorical[config$Target]) c(config$Target,config$CategoricalColumns[config$CategoricalColumns!=config$Target]) else config$CategoricalColumns),
       selectInput("xvar", label = "Principal component at x axis", choices = c(1:num_numericvars)),
-      selectInput("yvar", label = "Principal component at y axis", choices = c(2,1,3:num_numericvars))
+      selectInput("yvar", label = "Principal component at y axis", choices = unique(c(2,1,2:num_numericvars)))
     ),  
     plotOutput("plot"),
     actionButton("submit", label = "Export")
