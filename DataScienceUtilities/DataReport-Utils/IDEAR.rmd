@@ -1194,8 +1194,8 @@ shinyApp(
   ui = fluidPage(
     inputPanel(
       selectInput("catvar", label = "Color by categorical variable", choices = if(!is.null(config$Target) && isCategorical[config$Target]) c(config$Target,config$CategoricalColumns[config$CategoricalColumns!=config$Target]) else config$CategoricalColumns),
-      selectInput("xvar", label = "Principal component at x axis", choices = c(1:num_numericvars)),
-      selectInput("yvar", label = "Principal component at y axis", choices = unique(c(2,1,2:num_numericvars)))
+      selectInput("xvar", label = "Principal component at x axis", choices = c(1:num_numericvars), selected = '1'),
+      selectInput("yvar", label = "Principal component at y axis", choices = c(1:num_numericvars), selected = '2')
     ),  
     plotOutput("plot"),
     actionButton("submit", label = "Export")
