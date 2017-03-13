@@ -835,8 +835,7 @@ shinyApp(
         index1 <- is.na(col1)
         col1[index1] <- 0
         fit <- aov(col1 ~ data[[input$variable]])
-        EtaSq(fit)[1]
-        
+        tryCatch(EtaSq(fit)[1], error=function(e) 0)        
       } else{
         0
       }
@@ -891,7 +890,7 @@ shinyApp(
       if (nlevels(x) >= 2 & nlevels(x) <=500)
       {
         fit <- aov(data[[input$variable]]~ x)
-        EtaSq(fit)[1]
+	tryCatch(EtaSq(fit)[1], error=function(e) 0)
       } else{
         0
       }
