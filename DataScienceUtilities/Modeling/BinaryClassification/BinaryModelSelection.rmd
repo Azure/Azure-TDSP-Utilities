@@ -122,6 +122,10 @@ inTrain = createDataPartition(as.integer(rownames(trainDF)), p = trainTestSplitF
 trainData = trainDF[inTrain,];
 testData = trainDF[-inTrain,];
 
+## Vilter train and test data-sets by same countries
+trainData <- trainData[trainData[,'country'] %in% intersect(unique(trainData$country), unique(testData$country)),]
+testData <- testData[testData[,'country'] %in% intersect(unique(trainData$country), unique(testData$country)),]
+
 print (paste0("Input data description: ", description));
 print (paste0("Train/test split percent: ", trainTestSplitFraction));
 head(trainData, 3);
