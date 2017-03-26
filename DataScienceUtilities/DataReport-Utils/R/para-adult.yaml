@@ -1,0 +1,27 @@
+DataFilePath:
+    ../../../Data/Common/UCI_Income/train
+HasHeader:
+    Yes
+Separator:
+    ','
+CategoricalColumns:
+    - workclass
+    - education
+    - maritalstatus
+    - occupation
+    - relationship
+    - race
+    - sex
+    - nativecountry
+    - label_IsOver50K
+NumericalColumns:
+    - age 
+    - fnlwgt
+    - educationnum
+    - capitalgain
+    - capitalloss
+    - hoursperweek
+Target:
+    label_IsOver50K
+RLogFilePath:
+    adult.log.r

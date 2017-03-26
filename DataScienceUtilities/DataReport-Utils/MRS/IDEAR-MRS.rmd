@@ -1,0 +1,1480 @@
+
+---
+title: "Data Quality Report"
+author: "Team Data Science Process by Microsoft"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output: 
+  html_document:
+    toc: yes
+    toc_float: true
+    number_sections: true
+    css: style.css
+    theme: journal
+    highlight: espresso
+    fig_width: 7
+    fig_height: 6
+    fig_caption: true
+runtime: shiny
+
+---
+
+# Task Summary
+
+
+```{r echo = FALSE, message=FALSE, warning=FALSE}
+
+options(warn=-1)
+
+# install required packages
+options(repos='http://cran.rstudio.com/')
+list.of.packages <- c('Hmisc', 'psych', 'corrgram', 'yaml', 'entropy', 'vcd', 'shiny', 'corrplot', 'scatterplot3d', 'DescTools', 'xtable', 'shinyjs', 'RODBC','parallel','doSNOW','foreach', 'dplyr', 'lubridate')
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,'Package'])]
+if(length(new.packages))
+  install.packages(new.packages)
+
+library(yaml)
+library(RODBC)
+library(foreach)
+library(shiny)
+library(RevoScaleR)
+library(devtools)
+install_github("RevoEnhancements", "RevoEnhancements")
+library(RevoEnhancements)
+library(tools)
+library(vcd)
+
+# Set a parallel computing context
+parallelContext = RxLocalParallel()
+rxSetComputeContext(parallelContext)
+
+# select yaml file
+OS_type <- .Platform$OS.type
+if (OS_type == 'windows'){
+  winDialog(type = 'ok', 'Please select the .yaml file in the next popup window. Click OK to proceed.')
+} else{
+  print('Please input the path to the .yaml file after the next prompt.')
+}
+
+yaml_file <- tk_choose.files(caption='Select yaml File', multi = FALSE)
+config <- yaml.load_file(yaml_file)
+
+if(is.null(config$RowsPerRead)){
+  config$RowsPerRead <- 500000
+} else {
+  config$RowsPerRead <- as.integer(config$RowsPerRead)
+}
+# data source
+if(is.null(config$DataSource) || config$DataSource == 'local'){
+  infile <- file.path(config$DataFilePath)
+  outfile <- paste0(config$DataFilePath,'_mrs.xdf')
+  if(file_ext(config$DataFilePath)=='xdf'){
+    data <- RxXdfData(infile)
+  } else {
+    #input <- RxTextData(file = infile, delimiter = config$Separator, firstRowIsColNames = config$HasHeader)
+    #rxImport(inData = input, outFile = outfile, overwrite = TRUE)
+    rxTextToXdf(inFile = infile, outFile = outfile,  stringsAsFactors = TRUE, overwrite = TRUE, columnDelimiters = config$Separator, firstRowIsColNames = config$HasHeader, reportProgress = 0, rowsPerRead=config$RowsPerRead)
+    data =  RxXdfData(outfile)
+  }
+} else {
+  dbhandle <- odbcDriverConnect(paste0('driver={SQL Server};server=',config$Server,';database=',config$Database,';Uid=',config$Username,';Pwd=',config$Password))
+  dbdata <- RxOdbcData(sqlQuery = config$Query, connectionString = dbhandle)
+  infile <- file.path(getwd(),'db_mrs.xdf')
+  rxImport(dbdata, infile , overwrite = TRUE)
+  data <- RxXdfData(infile)
+}
+
+# get a sample of the data if the original data is too large.
+records<- dim(data)[1]
+if(is.null(config$SampleRecords)){
+  sample_records<- 10000    
+} else {
+  sample_records<-config$SampleRecords
+}
+
+if(records>sample_records)
+{
+  sampled_data_frame <- head(data, sample_records)
+  #sampled_data_frame <- rxSample2Df(data = data, size = sample_records, replace = FALSE)
+  sampleoutfile <-paste0(config$DataFilePath,'_sample.xdf')
+  sampled_data <- rxDataFrameToXdf(data = sampled_data_frame, outFile = sampleoutfile, overwrite = TRUE)
+} else {
+  sampled_data_frame <- rxImport(inData = data)
+  sampled_data <- data
+}
+
+# add datetime columns
+library(lubridate)
+
+autogen_datetime_columns <- character()
+if(!is.null(config$DateTimeColumns)){
+  for (dt in names(config$DateTimeColumns)) {
+    sampled_data_frame[[dt]] <- as.POSIXct(sampled_data_frame[[dt]], format = config$DateTimeColumns[[dt]])
+    
+    new_col_name <- paste0(dt, '_autogen_year')
+    sampled_data_frame[[new_col_name]] <- year(sampled_data_frame[[dt]])
+    if (length(unique(na.omit(sampled_data_frame[[new_col_name]]))) == 1){
+      sampled_data_frame[[new_col_name]] <- NULL
+    } else{
+      autogen_datetime_columns <- c(autogen_datetime_columns, new_col_name)
+    }
+    
+
+    new_col_name <- paste0(dt, '_autogen_month')
+    sampled_data_frame[[new_col_name]] <- month(sampled_data_frame[[dt]]) 
+    if (length(unique(na.omit(sampled_data_frame[[new_col_name]]))) == 1){
+      sampled_data_frame[[new_col_name]] <- NULL
+    } else{
+      autogen_datetime_columns <- c(autogen_datetime_columns, new_col_name)
+    }
+    
+    new_col_name <- paste0(dt, '_autogen_week')
+    sampled_data_frame[[new_col_name]] <- week(sampled_data_frame[[dt]])
+    if (length(unique(na.omit(sampled_data_frame[[new_col_name]]))) == 1){
+      sampled_data_frame[[new_col_name]] <- NULL
+    } else{
+      autogen_datetime_columns <- c(autogen_datetime_columns, new_col_name)
+    }
+    
+    new_col_name <- paste0(dt, '_autogen_day')
+    sampled_data_frame[[new_col_name]] <- day(sampled_data_frame[[dt]])
+    if (length(unique(na.omit(sampled_data_frame[[new_col_name]]))) == 1){
+      sampled_data_frame[[new_col_name]] <- NULL
+    } else{
+      autogen_datetime_columns <- c(autogen_datetime_columns, new_col_name)
+    }
+    
+    new_col_name <- paste0(dt, '_autogen_wday')
+    sampled_data_frame[[new_col_name]] <- wday(sampled_data_frame[[dt]])
+    if (length(unique(na.omit(sampled_data_frame[[new_col_name]]))) == 1){
+      sampled_data_frame[[new_col_name]] <- NULL
+    } else{
+      autogen_datetime_columns <- c(autogen_datetime_columns, new_col_name)
+    }
+    
+    new_col_name <- paste0(dt, '_autogen_hour')
+    sampled_data_frame[[new_col_name]] <- hour(sampled_data_frame[[dt]])
+    if (length(unique(na.omit(sampled_data_frame[[new_col_name]]))) == 1){
+      sampled_data_frame[[new_col_name]] <- NULL
+    } else{
+      autogen_datetime_columns <- c(autogen_datetime_columns, new_col_name)
+    }
+    
+    new_col_name <- paste0(dt, '_autogen_minute')
+    sampled_data_frame[[new_col_name]] <- minute(sampled_data_frame[[dt]])
+    if (length(unique(na.omit(sampled_data_frame[[new_col_name]]))) == 1){
+      sampled_data_frame[[new_col_name]] <- NULL
+    } else{
+      autogen_datetime_columns <- c(autogen_datetime_columns, new_col_name) 
+    }
+    
+    new_col_name <- paste0(dt, '_autogen_second')
+    sampled_data_frame[[new_col_name]] <- second(sampled_data_frame[[dt]])
+    if (length(unique(na.omit(sampled_data_frame[[new_col_name]]))) == 1){
+      sampled_data_frame[[new_col_name]] <- NULL
+    } else{
+      autogen_datetime_columns <- c(autogen_datetime_columns, new_col_name)
+    }
+    config$ColumnsToExclude <- c(config$ColumnsToExclude, dt)
+  }
+}
+
+sampleoutfile <-paste0(config$DataFilePath,'_sample.xdf')
+sampled_data <- rxDataFrameToXdf(data = sampled_data_frame, outFile = sampleoutfile, overwrite = TRUE)
+
+# Add datetime components to conf$CategoricalColumns
+CategoricalColumns <- config$CategoricalColumns
+config$CategoricalColumns <- c(config$CategoricalColumns, autogen_datetime_columns)
+
+# detect data types
+detectDataTypes <- function(data, cat_auto_detect_threshold = 3){
+  isNumerical<- vector(mode='logical', length = length(names(data)))
+  names(isNumerical) <- names(data)
+  isCategorical<-vector(mode='logical', length = length(names(data)))
+  names(isCategorical)<- names(data)
+  
+  info = rxGetInfo(data = data, getVarInfo = TRUE)
+  
+  names <- names(data)
+  for(name in names) {
+    type<- (info$varInfo[[name]])[[1]]
+    if(type=='integer'){
+      varSummary <- rxSummary(formula = as.formula(paste0('~ F(',name,')')), data = data, reportProgress = 0, rowsPerRead=config$RowsPerRead)
+      uniqueValues <- dim(varSummary$categorical[[1]])[1]
+      if(records/uniqueValues > 500 || uniqueValues <= cat_auto_detect_threshold)
+      {
+        isCategorical[name]<- TRUE
+      } else{
+        isNumerical[[name]] = TRUE
+      }
+    } else if (type=='numeric'){
+      isNumerical[name]<-TRUE
+    } else if(type=='character' || type=='logical'){
+        isCategorical[name]<- TRUE
+    } else if(type=='factor'){
+        isCategorical[name]=TRUE
+        level<-(info$varInfo[[name]])[[4]]
+        if( records/level<2 )
+        {
+          config$ColumnsToExclude<-c(config$ColumnsToExclude, name)
+        }
+    }
+  }
+  result<-cbind(isNumerical, isCategorical)
+  return (result)
+}
+types<- detectDataTypes(data)
+
+if(!is.null(config$DateTimeColumns))
+{
+  autogen_datetime_columns_isNumerical<- rep(F, length = length(autogen_datetime_columns))
+  names(autogen_datetime_columns_isNumerical) <- autogen_datetime_columns
+
+  autogen_datetime_columns_isCategorical<-rep(T, length = length(autogen_datetime_columns))
+  names(autogen_datetime_columns_isCategorical)<- autogen_datetime_columns
+  
+  autogen_datetime_columns_types <- cbind(autogen_datetime_columns_isNumerical, autogen_datetime_columns_isCategorical)
+  types <- rbind(types,autogen_datetime_columns_types)
+}
+
+  
+isNumerical <- types[,1]
+isCategorical <- types[,2]
+
+# override auto-detected isCategorical with the specified categorical variables in yaml
+if(!is.null(config$CategoricalColumns)){
+  config$CategoricalColumns <- make.names(config$CategoricalColumns, unique=TRUE)
+  for(v in config$CategoricalColumns){
+    isCategorical[v] <- TRUE
+    isNumerical[v] <- FALSE
+  }
+}
+# override auto-detected isNumerical with the specified numerical variables in yaml
+if(!is.null(config$NumericalColumns)){
+  config$NumericalColumns <- make.names(config$NumericalColumns, unique = TRUE)
+  for(v in config$NumericalColumns){
+    isNumerical[v] <- TRUE
+    isCategorical[v] <- FALSE
+    }
+}
+
+# populate config$CategoricalColumns and config$NumericalColumns with detected and specified variables
+colNames <- names(sampled_data_frame)
+config$CategoricalColumns <- colNames[isCategorical[colNames] == TRUE]
+config$NumericalColumns <- colNames[isNumerical[colNames] == TRUE]
+
+sampled_data_frame[config$CategoricalColumns] <- lapply(sampled_data_frame[config$CategoricalColumns], factor)
+
+config$ColumnsToExclude <- c(config$ColumnsToExclude, names(config$DateTimeColumns))
+
+# exclude columns from the report
+if(!is.null(config$ColumnsToExclude)){
+  config$CategoricalColumns <- config$CategoricalColumns[!config$CategoricalColumns %in% config$ColumnsToExclude]
+  config$NumericalColumns <- config$NumericalColumns[!config$NumericalColumns %in% config$ColumnsToExclude]
+}
+
+# replace missing values
+if(!is.null(config$MissingValueReplaceWith)){
+  missingValueReplacement <- config$MissingValueReplaceWith
+} else {
+  missingValueReplacement <- 0
+}
+
+# detect task type
+if(is.null(config$Target)){
+  taskType <- 'data_exploration'
+} else if(isCategorical[config$Target]==FALSE){
+  taskType <- 'regression'
+} else {
+  taskType <- 'classification'
+}
+
+# Remove the DateTimeColumns field from the updated YAML file 
+config$DateTimeColumns <- NULL
+
+# write updated yaml
+if((!is.null(config$DataSource)) && config$DataSource != 'local'){ 
+  # if data source is not local file, do not add datetime components into yaml file.
+  config$CategoricalColumns <- CategoricalColumns
+}
+  
+new_yaml_file <- paste0(substr(yaml_file, 1, nchar(yaml_file)-5),'_updated.yaml')
+write(as.yaml(config), new_yaml_file)
+
+code = "
+#' ---
+#' title: 'Data Quality Report'
+#' author: 'Team Data Science Process by Microsoft'
+#' output: 
+#'  html_document:
+#'    toc: yes
+#' ---
+#+ echo=FALSE
+
+options(warn=-1)
+
+# install required packages
+options(repos='http://cran.rstudio.com/')
+list.of.packages <- c('Hmisc', 'psych', 'corrgram', 'yaml', 'entropy', 'vcd', 'shiny', 'corrplot', 'scatterplot3d', 'DescTools', 'xtable', 'shinyjs', 'RODBC','parallel','doSNOW','foreach', 'dplyr', 'lubridate')
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,'Package'])]
+if(length(new.packages))
+  install.packages(new.packages)
+
+# intall knitr version 1.12 
+if (!'knitr' %in% installed.packages()[,'Package']){
+  knitrurl <- 'http://cran.r-project.org/src/contrib/Archive/knitr/knitr_1.12.tar.gz'
+  install.packages(knitrurl, repos=NULL, type='source')
+} else if ('1.12' != installed.packages()['knitr','Version']){
+  remove.packages('knitr')
+  knitrurl <- 'http://cran.r-project.org/src/contrib/Archive/knitr/knitr_1.12.tar.gz'
+  install.packages(knitrurl, repos=NULL, type='source')
+}
+
+library(yaml)
+library(RODBC)
+library(foreach)
+library(shiny)
+library(RevoScaleR)
+library(devtools)
+install_github('RevoEnhancements', 'RevoEnhancements')
+library(RevoEnhancements)
+library(tools)
+library(vcd)
+
+# select yaml file
+# yaml
+yaml_file <- yaml_file_location
+config <- yaml.load_file(yaml_file)
+
+if(is.null(config$RowsPerRead)){
+  config$RowsPerRead <- 500000
+} else {
+  config$RowsPerRead <- as.integer(config$RowsPerRead)
+}
+# data source
+if(is.null(config$DataSource) || config$DataSource == 'local'){
+  infile <- file.path(config$DataFilePath)
+  outfile <- paste0(config$DataFilePath,'_mrs.xdf')
+  if(file_ext(config$DataFilePath)=='xdf'){
+    data <- RxXdfData(infile)
+  } else {
+    rxTextToXdf(inFile = infile, outFile = outfile,  stringsAsFactors = TRUE, overwrite = TRUE, columnDelimiters = config$Separator, firstRowIsColNames = config$HasHeader, reportProgress = 0, rowsPerRead=config$RowsPerRead)
+    data =  RxXdfData(outfile)
+  }
+} else {
+  dbhandle <- odbcDriverConnect(paste0('driver={SQL Server};server=',config$Server,';database=',config$Database,';Uid=',config$Username,';Pwd=',config$Password))
+  data <- RxOdbcData(sqlQuery = config$Query, connectionString = dbhandle)
+}
+
+# get a sample of the data if the original data is too large.
+records<- dim(data)[1]
+if(is.null(config$SampleRecords)){
+  sample_records<- 10000    
+} else {
+  sample_records<-config$SampleRecords
+}
+
+if(records>sample_records)
+{
+  sampled_data_frame <- head(data, sample_records)
+  #sampled_data_frame <- rxSample2Df(data = data, size = sample_records, replace = FALSE)
+  sampleoutfile <-paste0(config$DataFilePath,'_sample.xdf')
+  sampled_data <- rxDataFrameToXdf(data = sampled_data_frame, outFile = sampleoutfile, overwrite = TRUE)
+} else {
+  sampled_data_frame <- rxImport(inData = data)
+  sampled_data <- data
+}
+
+# add datetime columns
+library(lubridate)
+
+autogen_datetime_columns <- character()
+if(!is.null(config$DateTimeColumns)){
+  for (dt in names(config$DateTimeColumns)) {
+    sampled_data_frame[[dt]] <- as.POSIXct(sampled_data_frame[[dt]], format = config$DateTimeColumns[[dt]])
+    
+    new_col_name <- paste0(dt, '_autogen_year')
+    sampled_data_frame[[new_col_name]] <- year(sampled_data_frame[[dt]])
+    if (length(unique(na.omit(sampled_data_frame[[new_col_name]]))) == 1){
+      sampled_data_frame[[new_col_name]] <- NULL
+    } else{
+      autogen_datetime_columns <- c(autogen_datetime_columns, new_col_name)
+    }
+    
+
+    new_col_name <- paste0(dt, '_autogen_month')
+    sampled_data_frame[[new_col_name]] <- month(sampled_data_frame[[dt]]) 
+    if (length(unique(na.omit(sampled_data_frame[[new_col_name]]))) == 1){
+      sampled_data_frame[[new_col_name]] <- NULL
+    } else{
+      autogen_datetime_columns <- c(autogen_datetime_columns, new_col_name)
+    }
+    
+    new_col_name <- paste0(dt, '_autogen_week')
+    sampled_data_frame[[new_col_name]] <- week(sampled_data_frame[[dt]])
+    if (length(unique(na.omit(sampled_data_frame[[new_col_name]]))) == 1){
+      sampled_data_frame[[new_col_name]] <- NULL
+    } else{
+      autogen_datetime_columns <- c(autogen_datetime_columns, new_col_name)
+    }
+    
+    new_col_name <- paste0(dt, '_autogen_day')
+    sampled_data_frame[[new_col_name]] <- day(sampled_data_frame[[dt]])
+    if (length(unique(na.omit(sampled_data_frame[[new_col_name]]))) == 1){
+      sampled_data_frame[[new_col_name]] <- NULL
+    } else{
+      autogen_datetime_columns <- c(autogen_datetime_columns, new_col_name)
+    }
+    
+    new_col_name <- paste0(dt, '_autogen_wday')
+    sampled_data_frame[[new_col_name]] <- wday(sampled_data_frame[[dt]])
+    if (length(unique(na.omit(sampled_data_frame[[new_col_name]]))) == 1){
+      sampled_data_frame[[new_col_name]] <- NULL
+    } else{
+      autogen_datetime_columns <- c(autogen_datetime_columns, new_col_name)
+    }
+    
+    new_col_name <- paste0(dt, '_autogen_hour')
+    sampled_data_frame[[new_col_name]] <- hour(sampled_data_frame[[dt]])
+    if (length(unique(na.omit(sampled_data_frame[[new_col_name]]))) == 1){
+      sampled_data_frame[[new_col_name]] <- NULL
+    } else{
+      autogen_datetime_columns <- c(autogen_datetime_columns, new_col_name)
+    }
+    
+    new_col_name <- paste0(dt, '_autogen_minute')
+    sampled_data_frame[[new_col_name]] <- minute(sampled_data_frame[[dt]])
+    if (length(unique(na.omit(sampled_data_frame[[new_col_name]]))) == 1){
+      sampled_data_frame[[new_col_name]] <- NULL
+    } else{
+      autogen_datetime_columns <- c(autogen_datetime_columns, new_col_name) 
+    }
+    
+    new_col_name <- paste0(dt, '_autogen_second')
+    sampled_data_frame[[new_col_name]] <- second(sampled_data_frame[[dt]])
+    if (length(unique(na.omit(sampled_data_frame[[new_col_name]]))) == 1){
+      sampled_data_frame[[new_col_name]] <- NULL
+    } else{
+      autogen_datetime_columns <- c(autogen_datetime_columns, new_col_name)
+    }
+    config$ColumnsToExclude <- c(config$ColumnsToExclude, dt)
+  }
+}
+
+
+# Add datetime components to conf$CategoricalColumns
+CategoricalColumns <- config$CategoricalColumns
+config$CategoricalColumns <- c(config$CategoricalColumns, autogen_datetime_columns)
+
+# detect data types
+detectDataTypes <- function(data, cat_auto_detect_threshold = 3){
+  isNumerical<- vector(mode='logical', length = length(names(data)))
+  names(isNumerical) <- names(data)
+  isCategorical<-vector(mode='logical', length = length(names(data)))
+  names(isCategorical)<- names(data)
+  
+  info = rxGetInfo(data = data, getVarInfo = TRUE)
+  
+  names <- names(data)
+  for(name in names) {
+    type<- (info$varInfo[[name]])[[1]]
+    if(type=='integer'){
+      varSummary <- rxSummary(formula = as.formula(paste0('~ F(',name,')')), data = data, reportProgress = 0, rowsPerRead=config$RowsPerRead)
+      uniqueValues <- dim(varSummary$categorical[[1]])[1]
+      if(records/uniqueValues > 500 || uniqueValues <= cat_auto_detect_threshold)
+      {
+        isCategorical[name]<- TRUE
+      } else{
+        isNumerical[[name]] = TRUE
+      }
+    } else if (type=='numeric'){
+      isNumerical[name]<-TRUE
+    } else if(type=='character' || type=='logical'){
+        isCategorical[name]<- TRUE
+    } else if(type=='factor'){
+        isCategorical[name]=TRUE
+        level<-(info$varInfo[[name]])[[4]]
+        if( records/level<2 )
+        {
+          config$ColumnsToExclude<-c(config$ColumnsToExclude, name)
+        }
+    }
+  }
+  result<-cbind(isNumerical, isCategorical)
+  return (result)
+}
+types<- detectDataTypes(data)
+isNumerical <- types[,1]
+isCategorical <- types[,2]
+
+# override auto-detected isCategorical with the specified categorical variables in yaml
+if(!is.null(config$CategoricalColumns)){
+  config$CategoricalColumns <- make.names(config$CategoricalColumns, unique=TRUE)
+  for(v in config$CategoricalColumns){
+    isCategorical[v] <- TRUE
+    isNumerical[v] <- FALSE
+  }
+}
+# override auto-detected isNumerical with the specified numerical variables in yaml
+if(!is.null(config$NumericalColumns)){
+  config$NumericalColumns <- make.names(config$NumericalColumns, unique = TRUE)
+  for(v in config$NumericalColumns){
+    isNumerical[v] <- TRUE
+    isCategorical[v] <- FALSE
+    }
+}
+
+# populate config$CategoricalColumns and config$NumericalColumns with detected and specified variables
+colNames <- names(data)
+config$CategoricalColumns <- colNames[isCategorical[colNames] == TRUE]
+config$NumericalColumns <- colNames[isNumerical[colNames] == TRUE]
+
+sampled_data_frame[config$CategoricalColumns] <- lapply(sampled_data_frame[config$CategoricalColumns], factor)
+
+config$ColumnsToExclude <- c(config$ColumnsToExclude, names(config$DateTimeColumns))
+
+# exclude columns from the report
+if(!is.null(config$ColumnsToExclude)){
+  config$CategoricalColumns <- config$CategoricalColumns[!config$CategoricalColumns %in% config$ColumnsToExclude]
+  config$NumericalColumns <- config$NumericalColumns[!config$NumericalColumns %in% config$ColumnsToExclude]
+}
+
+# replace missing values
+if(!is.null(config$MissingValueReplaceWith)){
+  missingValueReplacement <- config$MissingValueReplaceWith
+} else {
+  missingValueReplacement <- 0
+}
+
+# detect task type
+if(is.null(config$Target)){
+  taskType <- 'data_exploration'
+} else if(isCategorical[config$Target]==FALSE){
+  taskType <- 'regression'
+} else {
+  taskType <- 'classification'
+}
+
+# Remove the DateTimeColumns field from the updated YAML file 
+config$DateTimeColumns <- NULL
+
+# write updated yaml
+if((!is.null(config$DataSource)) && config$DataSource != 'local'){ 
+  # if data source is not local file, do not add datetime components into yaml file.
+  config$CategoricalColumns <- CategoricalColumns
+}
+
+#' # Task Summary
+#+ echo=FALSE
+#' - The metadata (location, numerical columns, target, etc.) is - *yaml_file_location*
+#' - The data location is - *`r config$DataFilePath`*
+#' - The target is - *`r config$Target`*
+#' - The task type is - *`r taskType`*.
+#' - The numerical variables are - *`r config$NumericalColumns`*
+#' - The categorical variables are - *`r config$CategoricalColumns`*
+#+ echo=FALSE
+
+"
+
+code <- gsub('yaml_file_location',paste0('"',gsub('\\\\','/',new_yaml_file),'"'), code)
+write(code, file = config$RLogFilePath, append = FALSE)
+
+```
+
+- The metadata (categorical columns, numerical columns, target, etc.) is specified in - *`r gsub('\\\\','/',yaml_file)`*
+- The data location is - `r config$DataFilePath`.
+- The target is - *`r config$Target`*.
+- The task type is - *`r taskType`*.
+- The numerical variables are - *`r config$NumericalColumns`*.
+- The categorical variables are - *`r config$CategoricalColumns`*.
+
+# Data Summary
+
+## Take a peek of the data by showing the top rows of the data
+```{r echo = FALSE, message=FALSE, warning=FALSE}
+
+shinyApp(
+  
+  ui = fluidPage(
+  inputPanel(
+  numericInput("rows", "Top Rows:", 10)
+  ),  
+  tableOutput("table"),
+  actionButton("submit", label = "Export")
+  ),
+  
+  server = function(input, output) {
+    
+   r = "
+#' # Data Summary
+#' ## Take a peek of the data by showing the top rows of the data
+#+ echo=FALSE
+     head(data, input$rows)
+  "
+  
+    r_code <- reactive({
+    gsub("input\\$rows", input$rows, r)
+    })
+    
+    output$table <- renderTable({
+      eval(parse(text = r_code()))
+    })
+    
+
+    observeEvent(input$submit, {
+      write(r_code(), file = config$RLogFilePath, append = TRUE)
+    })
+    
+  }
+)
+```
+
+## The dimensions of the data (Rows, Columns)
+
+```{r echo = FALSE, message = FALSE, warning = FALSE}
+
+ shinyApp(
+ 
+   ui = fluidPage(
+   tableOutput("table"),
+   actionButton("submit", label = "Export")
+   ),
+ 
+   server = function(input, output) {
+ 
+    r = "
+#' ## The dimensions of the data (Rows, Columns)
+#+ echo=FALSE
+dim <- as.data.frame( t(dim(data)))
+colnames(dim) <- c('Number of Rows','Number of Columns')
+dim
+    "
+      r_code <- reactive({
+        r
+    })
+      
+     output$table <- renderTable({
+       eval(parse(text = r_code()))
+     })
+ 
+ 
+     observeEvent(input$submit, {
+       write(r_code(), file = config$RLogFilePath, append = TRUE)
+     })
+   }
+ )
+
+```
+
+## Names and types of the columns
+```{r echo = FALSE, message=FALSE, warning=FALSE}
+
+ shinyApp(
+
+  ui = fluidPage(
+  verbatimTextOutput("text"),  
+  actionButton("submit", label = "Export")
+  ),
+
+  server = function(input, output) {
+
+   r = "
+#' ## Summarize basic statisics of the data
+#+ echo=FALSE
+info <- rxGetInfo(data, getVarInfo = TRUE)
+varInfo <- info$varInfo
+varInfo
+   "
+    output$text <- renderPrint({
+      eval(parse(text = r))
+    })
+
+
+    observeEvent(input$submit, {
+      write(r, file = config$RLogFilePath, append = TRUE)
+    })
+  }
+)
+
+```
+
+## Summarize basic statisics data
+```{r echo = FALSE, message=FALSE, warning=FALSE}
+
+shinyApp(
+
+  ui = fluidPage(
+  inputPanel(selectInput("var", label = "Variable:",  choices =  c(config$NumericalColumns,config$CategoricalColumns) [! c(config$NumericalColumns,config$CategoricalColumns) %in% autogen_datetime_columns])),
+  tableOutput("table"),  
+  actionButton("submit", label = "Export")
+  ),
+
+  server = function(input, output) {
+
+   r = "
+#' ## Summarize basic statisics of the data
+#+ echo=FALSE
+sum <- rxSummary(formula = as.formula(paste0('~', input$var)), data = data, reportProgress = 0, rowsPerRead=config$RowsPerRead)
+if(sum$categorical.type=='none'){
+as.data.frame(sum$sDataFrame)
+} else{
+as.data.frame(head(sum$categorical[[1]], 10))
+}
+   "
+    output$table <- renderTable({
+      eval(parse(text = r))
+    })
+
+
+    observeEvent(input$submit, {
+      write(r, file = config$RLogFilePath, append = TRUE)
+    })
+  }
+)
+
+```
+
+# Dive deeper into each individual variable
+
+
+## Visualize the target variable
+
+```{r echo = FALSE, message=FALSE, warning=FALSE}
+if(!is.null(config$Target))
+{
+shinyApp(
+  
+  ui = fluidPage(
+  inputPanel(
+  selectInput("target", label = "Target:",  choices = config$Target)
+  ),  
+  plotOutput("plot"),
+  actionButton("submit", label = "Export")
+  ),
+  
+  server = function(input, output) {
+    
+   r = "
+#' # Dive deeper into each individual variable
+#' ## Visualize the target variable
+#+ echo=FALSE
+
+if(isCategorical[config$Target])
+{
+    par(mfrow=c(1, 2)) 
+    tab_data = rxCrossTabs(formula = as.formula(paste0('~ F(',config$Target,')')), data = sampled_data)
+    barplot(tab_data$counts[[1]], main = paste('Bar Plot of', config$Target))
+    pie(tab_data$counts[[1]], main=paste('Pie Chart of', config$Target))  
+}else{
+    par(mfrow=c(1,2)) 
+    rxHistogram(formula = as.formula(paste0('~',config$Target)), data = sampled_data, title = paste('Histogram of Target:', config$Target), xTitle = config$Target)
+    rxBoxPlot(formula = as.formula(paste0('~', config$Target)), data = sampled_data)
+}
+  "
+  
+    r_code <- reactive({
+    gsub("input\\$target", input$target, r)
+    })
+    
+    output$plot <- renderPlot({
+      eval(parse(text = r_code()))
+    })
+    
+
+    observeEvent(input$submit, {
+      write(r_code(), file = config$RLogFilePath, append = TRUE)
+    })
+    
+  }
+)
+} else {
+  
+      msg = "This is a data exploratory task and it doesn't have a target."
+      msg
+}
+```
+
+## Visualize the numerical variables
+
+You can select the variable from the drop list. 
+```{r echo = FALSE, message=FALSE, warning=FALSE}
+library(shiny)
+
+shinyApp(
+  ui = fluidPage(
+    inputPanel(selectInput("numeric", label = "Variable:", choices = config$NumericalColumns), 
+               numericInput("breaks", "Breaks:", 100)),
+    plotOutput("plot"), 
+    actionButton("submit", label = "Export")
+  ),
+  
+  server = function(input, output) {
+    
+   r = "
+#' ## Visualize the numerical variables
+#+ echo=FALSE
+  # histogram
+  par(mfrow=c(1,2))
+  #rxBoxPlot(formula = as.formula(paste0('~',input$numeric)), data = sampled_data)
+  rxHistogram(formula = as.formula(paste0('~',input$numeric)), data = sampled_data, numBreaks = input$breaks, title = paste('Histogram of Target:', input$numeric), xTitle = input$numeric, reportProgress = 0, rowsPerRead=config$RowsPerRead)
+
+  "
+    r_code <- reactive({
+	gsub('input\\$numeric', paste0("'",input$numeric,"'"), r)
+    })
+    
+    output$plot <- renderPlot({
+      eval(parse(text = r_code()))
+    })
+    
+
+    observeEvent(input$submit, {
+      write(r_code(), file = config$RLogFilePath, append = TRUE)
+    })
+    
+  },
+  
+  options = list(height = 500)
+)
+```
+
+## Visualize the categorical variables
+
+You can select the variable from the drop list.
+
+```{r echo = FALSE, message=FALSE, warning=FALSE}
+shinyApp(
+  
+  ui = fluidPage(
+    
+	  inputPanel(selectInput("categoric", label = "Categorical Variable:",
+            choices = config$CategoricalColumns)),
+    plotOutput("plot"),
+	  actionButton("submit", label = "Export")
+  ),
+  
+  server = function(input, output) {
+    
+   r = "
+#' ## Visualize the categorical variables
+#+ echo=FALSE
+     # barplot and pie chart
+  par(mfrow=c(1,2))
+  
+  tab_data <- rxCrossTabs(formula = as.formula(paste0('~ F(',input$categoric,')')), data = sampled_data)
+  sorted_tab_data <- sort(tab_data$counts[[1]], decreasing = TRUE)
+  barplot(tab_data$counts[[1]], main = paste('Bar Plot of', input$categoric))
+  pie(sorted_tab_data, main=paste('Pie Chart of', input$categoric))  
+
+  "
+    r_code <- reactive({
+	gsub("input\\$categoric", paste0("'",input$categoric,"'"), r)
+    })
+    
+    output$plot <- renderPlot({
+      eval(parse(text = r_code()))
+    })
+    
+
+    observeEvent(input$submit, {
+      write(r_code(), file = config$RLogFilePath, append = TRUE)
+    })
+    
+  }
+)
+```
+
+
+#  Investigate Multiple Variable Interactions
+
+## Rank variables
+Rank variables (numerical and categorical) based on strengths of association with a selected variable. This helps you understand the top dependent variables (grouped by numerical and categorical) of the selected variable.
+
+```{r echo = FALSE, message=FALSE, warning=FALSE}
+shinyApp(
+  
+  ui = fluidPage(
+    inputPanel(selectInput("variable", label = "Variable:", choices = if(!is.null(config$Target)) { c(config$Target,config$NumericalColumns[config$NumericalColumns!=config$Target],config$CategoricalColumns[config$CategoricalColumns!=config$Target]) } else {c(config$NumericalColumns, config$CategoricalColumns)}),
+  numericInput("top_num", label = "Top Numerical Variables", 5),
+  numericInput("top_cat", label = "Top Categorical Variables", 5)),
+  actionButton("go", "Go"),
+  plotOutput("plot"),
+  actionButton("submit", label = "Export")
+  ),
+  
+  server = function(input, output) {
+    
+   r = "
+#' # Investigation on Multiple Variable Interactions
+#' ## Rank associated variables
+#' This helps you to understand the top dependent variables (grouped by numerical and categorical) of a variable of your choice.
+#+ echo=FALSE
+    library(parallel)
+    library(doSNOW)
+     par(mfrow=c(1,2)) 
+  no_cores <- max(detectCores() - 1, 1)
+  cluster <- makeCluster(no_cores)
+  registerDoSNOW(cluster)
+  if(isCategorical[input$variable] == TRUE){
+    aov_v <- foreach(i=1:length(config$NumericalColumns),.export=c('config','sampled_data'),.packages=c('DescTools'),.combine='c') %dopar%
+    {
+      get('config')
+      get('sampled_data')
+## fix corner case when the cat level is one
+      lm <- rxLinMod(formula = as.formula(paste0(config$NumericalColumns[i], ' ~ ', input$variable)), data = sampled_data)
+      lm$r.squared
+    }
+    names(aov_v) <- config$NumericalColumns
+    aov_v <- subset(aov_v, names(aov_v)!=input$variable)
+    aov_v <- sort(aov_v, decreasing = TRUE)
+    barplot(head(aov_v, input$top_num), xlab = 'Eta-squared value', beside=TRUE, main = paste('Top', length(head(aov_v, input$top_num)), 'Associated Numerical Variables'), las=2, cex.axis = 0.7, space=1)
+    
+    # compute cramer's v with rx function
+    cramer_v <- foreach(i=1:length(config$CategoricalColumns),.export=c('config','sampled_data'), .combine='c') %do%
+    {
+      get('config')
+      get('sampled_data')
+      tab_data <- rxCrossTabs(formula = as.formula(paste0(' ~ F(',input$variable, '):F(', config$CategoricalColumns[i],')')), data = sampled_data)
+      if(is.na(ncol(tab_data$counts[[1]]))==FALSE)
+      {
+        chi_stats <- rxChiSquaredTest(tab_data)
+        sqrt(chi_stats[[1]] / sum(tab_data$counts[[1]]))
+      }
+    }
+
+    names(cramer_v) <- config$CategoricalColumns[config$CategoricalColumns!=input$variable]
+    cramer_v <- sort(cramer_v, decreasing = TRUE)
+    barplot(head(cramer_v, input$top_cat), xlab = 'Cramer\\'s V', beside=TRUE, main = paste('Top', length(head(cramer_v, input$top_cat)), 'Associated Categorical Variables'), las=2, cex.axis = 0.7)
+    
+    
+  } else{
+    if(length(config$NumericalColumns)>=2){
+
+      cor <- rxCor(formula = as.formula(paste0(' ~ ', paste(c(input$variable, config$NumericalColumns),collapse = '+'))),data = sampled_data)
+      cor=cor[1,]
+      cor <- subset( cor, names(cor) != input$variable)
+      cor_s <- cor*cor
+      names(cor_s) <- names(cor)
+      cor_s <- sort(cor_s, decreasing = TRUE)
+      barplot(head(cor_s, input$top_num), xlab = 'R-squared (squared correlation)', beside=TRUE, main = paste('Top', length(head(cor_s, input$top_num)), 'Associated Numerical Variables'), las=2, cex.axis = 0.7)
+    }
+    
+    aov_v <- foreach(i=1:length(config$CategoricalColumns), .export=c('config', 'sampled_data'), .packages=c('DescTools'), .combine='c') %dopar%
+    {
+      get('config')
+      get('sampled_data')
+## fix corner case when the cat level is one
+      lm <- rxLinMod(formula = as.formula(paste0(input$variable, ' ~ ', config$CategoricalColumns[i])), data = sampled_data)
+      lm$r.squared
+    }
+    names(aov_v) <- config$CategoricalColumns
+    aov_v <- subset(aov_v, names(aov_v)!=input$variable)
+    aov_v <- sort(aov_v, decreasing = TRUE)
+    barplot(head(aov_v, input$top_cat), xlab = 'Eta-squared value', beside=TRUE, main = paste('Top', length(head(aov_v, input$top_cat)), 'Associated Categorical Variables'), las=2, cex.axis = 0.7)
+  }
+  stopCluster(cluster)
+  "
+
+    r_code <- eventReactive(input$go, {
+      r = gsub("input\\$variable", paste0("'",input$variable,"'"), r)
+  	  r = gsub("input\\$top_num", input$top_num, r)
+	    gsub("input\\$top_cat", input$top_cat, r)
+	    })
+    output$plot <- renderPlot({
+      eval(parse(text = r_code()))
+    })
+    
+
+    observeEvent(input$submit, {
+      write(r_code(), file = config$RLogFilePath, append = TRUE)
+    })
+    
+  }
+)
+
+```
+
+## Visualize interactions between two categorical variables
+
+You can select the two variables from the drop lists.
+```{r echo = FALSE, message=FALSE, warning=FALSE}
+shinyApp(
+  
+  ui = fluidPage(
+  inputPanel(
+  selectInput("categoric1", label = "Categorical Variable:", choices = if (!is.null(config$Target) && isCategorical[config$Target]) c(config$Target, config$CategoricalColumns[config$CategoricalColumns!=config$Target]) else config$CategoricalColumns),
+  selectInput("categoric2", label = "Categorical Variable:", choices = if (!is.null(config$Target) && isCategorical[config$Target]) c(config$Target, config$CategoricalColumns[config$CategoricalColumns!=config$Target]) else config$CategoricalColumns)),
+  plotOutput("plot"),
+  actionButton("submit", label = "Export")
+  ),
+  
+  server = function(input, output) {
+    
+   r = "
+#' ## Visualize interactions between two categorical variables
+#+ echo=FALSE
+  library(vcd)
+  par(mfrow=c(1,1)) 
+  tab_data = rxCrossTabs(formula = as.formula(paste0('~F(',input$categoric1,')+F(', input$categoric2,')')), data = sampled_data)
+  mosaicplot(tab_data$counts[[1]],  shade=TRUE, xlab=input$categoric1, ylab=input$categoric2, main=paste(input$categoric1,'VS', input$categoric2))
+   "
+  
+    r_code <- reactive({
+      r = gsub("input\\$categoric1", paste0("'",input$categoric1,"'"), r)
+      gsub("input\\$categoric2", paste0("'",input$categoric2,"'"), r)
+    })
+    
+    output$plot <- renderPlot({
+      eval(parse(text = r_code()))
+    })
+    
+
+    observeEvent(input$submit, {
+      write(r_code(), file = config$RLogFilePath, append = TRUE)
+    })
+    
+  }
+)
+```
+
+## Visualize interactions between two numerical variables
+
+You can select the two variables from the drop lists.
+```{r echo = FALSE, message=FALSE, warning=FALSE}
+shinyApp(
+  
+  ui = fluidPage(
+  inputPanel(
+  selectInput("numeric1", label = "Numerical Variable:", choices = if (!is.null(config$Target) && isNumerical[config$Target]) c(config$Target, config$NumericalColumns[config$NumericalColumns!=config$Target]) else config$NumericalColumns),
+  selectInput("numeric2", label = "Numerical Variable:", choices = if (!is.null(config$Target) && isNumerical[config$Target]) c(config$Target, config$NumericalColumns[config$NumericalColumns!=config$Target]) else config$NumericalColumns)),  
+  plotOutput("plot"),
+  actionButton("submit", label = "Export")
+  ),
+  
+  server = function(input, output) {
+    
+   r = "
+#' ## Visualize interactions between two numerical variables
+#+ echo=FALSE
+  par(mfrow=c(1,1)) 
+  rxLinePlot(formula = as.formula(paste0(input$numeric1,' ~ ',input$numeric2)), data = sampled_data, type = 'p', xTitle = input$numeric1, yTitle=input$numeric2, 
+  title = paste0(input$numeric1, ' VS ', input$numeric2))
+   "
+  
+    r_code <- reactive({
+      r = gsub("input\\$numeric1", paste0("'",input$numeric1,"'"), r)
+	    gsub("input\\$numeric2", paste0("'",input$numeric2,"'"), r)
+    })
+    
+    output$plot <- renderPlot({
+      eval(parse(text = r_code()))
+    })
+    
+
+    observeEvent(input$submit, {
+      write(r_code(), file = config$RLogFilePath, append = TRUE)
+    })
+    
+  }
+)
+```
+
+## Calculate the correlations between numerical variables
+
+```{r echo = FALSE, message=FALSE, warning=FALSE}
+
+if(length(config$NumericalColumns)>=2)
+{
+shinyApp(
+  
+  ui = fluidPage(
+    inputPanel(
+      selectInput("cororder", label = "Order:", choices = c("AOE","FPC", "hclust", "alphabet")),  
+      selectInput("corvismethod", label = "Shape:", choices = c("circle","square","ellipse","number","shade","color","pie")),
+      selectInput("corvistype", label = "Layout:", choices = c("full","upper", "lower"))),  
+    plotOutput("plot"),
+    actionButton("submit", label = "Export")
+  ),
+  
+  server = function(input, output) {
+    
+    r = "
+#' ## Calculate the correlations (pearson, kendall, or spearman) between numerical variables
+#+ echo=FALSE
+    library(corrgram)
+    library(corrplot)
+    par(mfrow=c(1,2))
+    c <- rxCor(formula = paste0('~',paste(config$NumericalColumns,collapse = '+')),data = sampled_data)
+    c[is.na(c)] <- missingValueReplacement
+    corrplot(c, method=input$corvismethod, order = input$cororder, insig = 'p-value',  sig.level=-1, type = input$corvistype)
+    "
+    
+    r_code <- reactive({
+      r = gsub("input\\$cormethod", paste0("'",input$cormethod,"'"), r)
+      r = gsub("input\\$cororder", paste0("'",input$cororder,"'"), r)
+      r = gsub("input\\$corvismethod", paste0("'",input$corvismethod,"'"), r)
+      gsub("input\\$corvistype", paste0("'",input$corvistype,"'"), r)
+    })
+    output$plot <- renderPlot({
+      eval(parse(text = r_code()))
+    })
+    
+    observeEvent(input$submit, {
+      write(r_code(), file = config$RLogFilePath, append = TRUE)
+    })
+  }
+)
+}
+
+```
+
+## Visualize interactions between numerical and categorical variables vis box plot
+
+X axis is the level of categorical variables. This helps you to understand whether the distribution of the numeric variable is significantly different at different levels of the categorical variable. 
+
+We test hypothesis 0 (h0) that the numeric variable has the same mean values across the different levels of the categorical variable. 
+```{r echo = FALSE, message=FALSE, warning=FALSE}
+
+shinyApp(
+  
+  ui = fluidPage(
+    inputPanel(
+      selectInput("numeric3", label = "Numeric Variable:", choices = if (!is.null(config$Target) && isNumerical[config$Target]) c(config$Target, config$NumericalColumns[config$NumericalColumns!=config$Target]) else config$NumericalColumns),
+      selectInput("categoric3", label = "Categorical Variable:", choices = if (!is.null(config$Target) && isCategorical[config$Target]) c(config$Target,config$CategoricalColumns[config$CategoricalColumns!=config$Target]) else config$CategoricalColumns)
+    ),   
+    plotOutput("plot"),
+    actionButton("submit", label = "Export")
+  ),
+  
+  server = function(input, output) {
+    
+    r = "
+#' ## Visualize interactions between numeric and categorical variables via box plot
+#' X axis is the level of categorical variables. This helps you to understand whether the distribution of the numeric variable is significantly different at different levels #' of the categorical variable. 
+#' We test hypothesis 0 (h0) that the numeric variable has the same mean values across the different levels of the categorical variable. 
+#+ echo=FALSE
+    
+    par(mfrow=c(1,2)) 
+    fit <- aov(sampled_data_frame[[input$numeric3]] ~ sampled_data_frame[[input$categoric3]])
+    test_results <- drop1(fit,~.,test='F')
+    p_value <- round(test_results[[6]][2],4)
+    if (p_value < 0.05){
+    h0 <- 'Rejected'
+    color <- 'red'
+    } else{
+    h0 <- 'Accepted'
+    color <- 'blue'
+    }
+    f <- as.formula(paste(input$numeric3,'~',input$categoric3))
+    boxplot(f, data= sampled_data_frame)
+    title(main=paste('h0', h0, '( p-value=', p_value, ')'), col.main=color)
+    "
+    
+    r_code <- reactive({
+      r = gsub("input\\$numeric3", paste0("'",input$numeric3,"'"), r)
+      gsub("input\\$categoric3", paste0("'",input$categoric3,"'"), r)
+    })
+    
+    output$plot <- renderPlot({
+      eval(parse(text = r_code()))
+    })
+    
+    
+    observeEvent(input$submit, {
+      write(r_code(), file = config$RLogFilePath, append = TRUE)
+    })
+    
+  }
+)
+```
+
+## Visualize interactions between numerical and categorical variables via histogram
+```{r echo = FALSE, message=FALSE, warning=FALSE}
+
+shinyApp(
+  
+  ui = fluidPage(
+    inputPanel(
+      selectInput("numeric3", label = "Numeric Variable:", choices = if (!is.null(config$Target) && isNumerical[config$Target]) c(config$Target, config$NumericalColumns[config$NumericalColumns!=config$Target]) else config$NumericalColumns),
+      selectInput("categoric3", label = "Categorical Variable:", choices = if (!is.null(config$Target) && isCategorical[config$Target]) c(config$Target,config$CategoricalColumns[config$CategoricalColumns!=config$Target]) else config$CategoricalColumns)
+    ),   
+    plotOutput("plot"),
+    actionButton("submit", label = "Export")
+  ),
+  
+  server = function(input, output) {
+    
+    r = "
+#' ## Visualize interactions between numeric and categorical variables
+#+ echo=FALSE
+    
+    f <- as.formula(paste('~', input$numeric3,'|',input$categoric3))
+    rxHistogram(f, data = sampled_data)
+    "
+    
+    r_code <- reactive({
+      r = gsub("input\\$numeric3", paste0("'",input$numeric3,"'"), r)
+      gsub("input\\$categoric3", paste0("'",input$categoric3,"'"), r)
+    })
+    
+    output$plot <- renderPlot({
+      eval(parse(text = r_code()))
+    })
+    
+    
+    observeEvent(input$submit, {
+      write(r_code(), file = config$RLogFilePath, append = TRUE)
+    })
+    
+  }
+)
+```
+
+## Visualize interactions between numerical variables grouped by categorical variables
+```{r echo = FALSE, message=FALSE, warning=FALSE}
+
+shinyApp(
+  
+  ui = fluidPage(
+    inputPanel(
+            selectInput("numeric1", label = "Numeric Variable:", choices = if (!is.null(config$Target) && isNumerical[config$Target]) c(config$Target, config$NumericalColumns[config$NumericalColumns!=config$Target]) else config$NumericalColumns),
+      selectInput("numeric2", label = "Numeric Variable:", choices = if (!is.null(config$Target) && isNumerical[config$Target]) c(config$Target, config$NumericalColumns[config$NumericalColumns!=config$Target]) else config$NumericalColumns),
+      selectInput("categoric", label = "Categorical Variable:", choices = if (!is.null(config$Target) && isCategorical[config$Target]) c(config$Target,config$CategoricalColumns[config$CategoricalColumns!=config$Target]) else config$CategoricalColumns)
+    ),   
+    plotOutput("plot"),
+    actionButton("submit", label = "Export")
+  ),
+  
+  server = function(input, output) {
+    
+    r = "
+#' ## Visualize interactions between numeric and categorical variables
+#+ echo=FALSE
+    
+    f <- as.formula(paste(input$numeric1, '~', input$numeric2,'|',input$categoric))
+    rxLinePlot(f, data= sampled_data, type='p')
+    "
+    
+    r_code <- reactive({
+      r = gsub("input\\$numeric1", paste0("'",input$numeric1,"'"), r)
+      r = gsub("input\\$numeric2", paste0("'",input$numeric2,"'"), r)
+      gsub("input\\$categoric", paste0("'",input$categoric,"'"), r)
+    })
+    
+    output$plot <- renderPlot({
+      eval(parse(text = r_code()))
+    })
+    
+    
+    observeEvent(input$submit, {
+      write(r_code(), file = config$RLogFilePath, append = TRUE)
+    })
+    
+  }
+)
+```
+
+
+## Project numerical variables to principal components, and visualize
+
+```{r echo = FALSE, message=FALSE, warning=FALSE}
+
+if(length(config$NumericalColumns)>=2)
+{
+library(scatterplot3d)
+sampled_data_frame[is.na(sampled_data_frame)] <- missingValueReplacement
+x <- apply(sampled_data_frame[,config$NumericalColumns],2,min)
+y <- apply(sampled_data_frame[,config$NumericalColumns],2,max)
+index <- x == y
+nonConstantNames <- config$NumericalColumns[!index]
+
+x <- sampled_data_frame[,nonConstantNames]
+sigma <- rxCor(formula = as.formula(paste0('~ ', paste(nonConstantNames,collapse = '+'))), data = sampled_data, reportProgress = 0, rowsPerRead=config$RowsPerRead)
+
+sigma_eigen <- eigen(sigma)
+sigma_values <- sigma_eigen$values
+index <- sigma_values < 0 
+if (sum(index) > 0)
+{
+  sigma_values[index] <- 0
+}
+sum_variance <- sum(sigma_values^2)
+x <- scale(x)
+loadings <- x %*% sigma_eigen$vectors
+p.variance.explained <- sigma_values^2/sum_variance
+p.variance.cumsum <- cumsum(p.variance.explained)*100
+
+num_numericvars <- length(nonConstantNames)
+
+r = "
+#+ echo=FALSE
+
+library(scatterplot3d)
+sampled_data_frame[is.na(sampled_data_frame)] <- missingValueReplacement
+x <- apply(sampled_data_frame[,config$NumericalColumns],2,min)
+y <- apply(sampled_data_frame[,config$NumericalColumns],2,max)
+index <- x == y
+nonConstantNames <- config$NumericalColumns[!index]
+
+x <- sampled_data_frame[,nonConstantNames]
+sigma <- cor(x)
+sigma_eigen <- eigen(sigma)
+sigma_values <- sigma_eigen$values
+index <- sigma_values < 0 
+if (sum(index) > 0)
+{
+  sigma_values[index] <- 0
+}
+sum_variance <- sum(sigma_values^2)
+x <- scale(x)
+loadings <- x %*% sigma_eigen$vectors
+p.variance.explained <- sigma_values^2/sum_variance
+p.variance.cumsum <- cumsum(p.variance.explained)*100
+
+num_numericvars <- length(nonConstantNames)
+"
+write(r, file = config$RLogFilePath, append = TRUE)
+
+shinyApp(
+  
+  ui = fluidPage(
+    inputPanel(
+      selectInput("catvar", label = "Color by categorical variable", choices = if(!is.null(config$Target) && isCategorical[config$Target]) c(config$Target,config$CategoricalColumns[config$CategoricalColumns!=config$Target]) else config$CategoricalColumns),
+      selectInput("xvar", label = "Principal component at x axis", choices = c(1:num_numericvars)),
+      selectInput("yvar", label = "Principal component at y axis", choices = unique(c(2,1,2:num_numericvars)))
+    ),  
+    plotOutput("plot"),
+    actionButton("submit", label = "Export")
+  ),
+  
+  server = function(input, output) {
+    
+    r = "
+#' ## Project numeric variables to principal components, and visualize
+#+ echo=FALSE
+par(mfrow=c(1,2))
+# plot percentage of variance explained for each principal component
+ylimit <- ceiling(max(p.variance.explained)*100/5)*5
+barplot(100*p.variance.explained, las=2, xlab='Principal Components', ylab='% Variance Explained', xaxt='n', yaxt='n')
+axis(2, pretty(c(0,ylimit)), col='blue')
+box()
+par(new=TRUE)
+plot(1:num_numericvars, p.variance.cumsum, type='l', col='black', ylab='', xlab='', las=1, axes=FALSE, ylim=c(0,100), xaxt='n')
+axis(4, pretty(c(0,100)), col='black',col.axis='black',las=1, axes=F)
+num_pcs_80 <- sum(p.variance.cumsum <= 80)
+num_pcs_90 <- sum(p.variance.cumsum <= 90)
+num_pcs_95 <- sum(p.variance.cumsum <= 95)
+text(num_numericvars/10*3, 80, paste('80% by', num_pcs_80, 'pcs'))
+text(num_numericvars/10*3, 85, paste('90% by', num_pcs_90, 'pcs'))
+text(num_numericvars/10*3, 90, paste('95% by', num_pcs_95, 'pcs'))
+sampled_data_frame[[input$catvar]] <- factor(sampled_data_frame[[input$catvar]])
+plot(loadings[,as.numeric(input$xvar)], loadings[,as.numeric(input$yvar)], type='p', pch=20, col=as.numeric(sampled_data_frame[[input$catvar]]), xlab=paste('PC', input$xvar), ylab=paste('PC', input$yvar, sep=''))
+legend('topright', cex=.8,  legend = levels(sampled_data_frame[[input$catvar]]), fill = 1:nlevels(sampled_data_frame[[input$catvar]]), merge = F, bty = 'n')
+    "
+    
+    r_code <- reactive({
+      r = gsub("input\\$catvar", paste0("'",input$catvar,"'"), r)
+      r = gsub("input\\$xvar", paste0("'",input$xvar,"'"), r)
+      gsub("input\\$yvar", paste0("'",input$yvar,"'"), r)
+    })
+    
+    output$plot <- renderPlot({
+      eval(parse(text = r_code()))
+    })
+    
+    
+    observeEvent(input$submit, {
+      write(r_code(), file = config$RLogFilePath, append = TRUE)
+    })
+    
+  }
+)
+
+}
+```
+
+```{r echo = FALSE, message=FALSE, warning=FALSE}
+if(length(config$NumericalColumns)>=3)
+{
+shinyApp(
+  
+  ui = fluidPage(
+    inputPanel(
+      selectInput("cat1", label = "Color by categorical variable", choices = if (!is.null(config$Target) &&isCategorical[config$Target]) c(config$Target, config$CategoricalColumns[config$CategoricalColumns!=config$Target]) else config$CategoricalColumns),
+      selectInput('pc1', label = 'PC at x axis', choices = c(1:num_numericvars), selected = '1'),
+      selectInput('pc2', label = 'PC at y axis', choices = c(1:num_numericvars), selected = '2'),
+      selectInput('pc3', label = 'PC at z axis', choices = c(1:num_numericvars), selected = '3'),
+      sliderInput("angle", label = "View Angle", min = -180, max = 180, value = 40)
+    ),  
+    plotOutput("plot"),
+    actionButton("submit", label = "Export")
+  ),
+  
+  server = function(input, output) {
+    
+    r = "
+#' ## Project numeric variables to principal components, and visualize
+#+ echo=FALSE
+    x <- loadings[,as.numeric(input$pc1)]
+    y <- loadings[,as.numeric(input$pc2)]
+    z <- loadings[,as.numeric(input$pc3)]
+    sampled_data_frame[[input$cat1]] <- factor(sampled_data_frame[[input$cat1]])
+    par(mfrow=c(1,1))
+    DF <- data.frame(x = x, y = y, z = z, group = sampled_data_frame[[input$cat1]])
+    # create the plot, you can be more adventurous with colour if you wish
+    s3d <- with(DF, scatterplot3d(x, y, z, xlab=paste0('PC',input$pc1), ylab=paste0('PC',input$pc2), zlab=paste0('PC', input$pc3), color = as.numeric(group), pch = 19, angle = as.numeric(input$angle)))
+    legend('topleft', cex=.8,  legend = levels(sampled_data_frame[[input$cat1]]), fill = 1:nlevels(sampled_data_frame[[input$cat1]]), merge = F, bty = 'n')
+    "
+    
+    r_code <- reactive({
+      r = gsub("input\\$cat1", paste0("'",input$cat1,"'"), r)
+      r = gsub("input\\$angle", paste0("'",input$angle,"'"), r)
+      r = gsub("input\\$pc1", paste0("'",input$pc1,"'"), r)
+      r = gsub("input\\$pc2", paste0("'",input$pc2,"'"), r)
+      gsub("input\\$pc3", paste0("'",input$pc3,"'"), r)
+    })
+    
+    output$plot <- renderPlot({
+      eval(parse(text = r_code()))
+    })
+    
+    observeEvent(input$submit, {
+      write(r_code(), file = config$RLogFilePath, append = TRUE)
+    })
+    
+  }
+)
+}
+
+```
+
+# Final Report
+
+```{r, echo = FALSE, message=FALSE}
+library(shinyjs)
+shinyApp(
+  
+  ui = fluidPage(
+    shinyjs::useShinyjs(),
+    inputPanel(
+      actionButton('generateReport', 'Generate Report'),
+      shinyjs::hidden(actionButton('viewReport', 'View Report'))
+    ) 
+  ),
+  
+  server = function(input, output) {
+    
+    observeEvent(input$generateReport, {
+      shinyjs::disable('viewReport')
+      withProgress(message = 'Report Generation in progress', value = 0, {
+        rmarkdown::render(config$RLogFilePath, clean = FALSE)
+      })
+      shinyjs::show('viewReport')
+      shinyjs::enable('viewReport')
+    })
+    observeEvent(input$viewReport, {
+      browseURL(file.path(getwd(), paste0(substr(config$RLogFilePath, 1, nchar(config$RLogFilePath)-1),'html')))
+    })
+    
+  }
+)
+```
