@@ -3,7 +3,7 @@
 Interactive Data Exploratory Analysis and Reporting (IDEAR) is a tool developed for data scientists to interactively explore, visualize, and analyze data sets prior to building modeling tasks. 
 
 - Developed by Team Data Science Process (TDSP) team at Microsoft.
-- Version: 0.1
+- Version: 0.12
 
 ### How to Run
 
