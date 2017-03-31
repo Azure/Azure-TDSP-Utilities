@@ -8,7 +8,6 @@ output:
     toc: yes
     toc_float: true
     number_sections: true
-    css: style.css
     theme: journal
     highlight: espresso
     fig_width: 7
@@ -28,14 +27,18 @@ options(warn=-1)
 # install required packages
 options(repos='http://cran.rstudio.com/')
 list.of.packages <- c('Hmisc', 'psych', 'corrgram', 'yaml', 'entropy', 'vcd', 'shiny', 'corrplot', 'scatterplot3d', 'DescTools', 'xtable', 'shinyjs', 'RODBC','parallel','doSNOW','foreach', 'dplyr', 'lubridate', 'PCAmixdata')
+    css: style.css
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,'Package'])]
 if(length(new.packages))
-  install.packages(new.packages)
+  install.packages(new.packages, dependencies = TRUE)
 
 library(yaml)
 library(RODBC)
 library(foreach)
 library(shiny)
+library(tcltk)
+library(lattice)
+library(DescTools)
 
 OS_type <- .Platform$OS.type
 if (OS_type == 'windows'){
@@ -228,7 +231,7 @@ options(warn=-1)
 
 # install required packages
 options(repos='http://cran.rstudio.com/')
-list.of.packages <- c('Hmisc', 'psych', 'corrgram', 'yaml', 'entropy', 'vcd', 'ggvis', 'shiny', 'corrplot', 'scatterplot3d', 'DescTools', 'xtable', 'shinyjs', 'RODBC','parallel','doSNOW','foreach', 'dplyr')
+list.of.packages <- c('Hmisc', 'psych', 'corrgram', 'yaml', 'entropy', 'vcd', 'shiny', 'corrplot', 'scatterplot3d', 'DescTools', 'xtable', 'shinyjs', 'RODBC','parallel','doSNOW','foreach', 'dplyr', 'lubridate', 'PCAmixdata')
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,'Package'])]
 if(length(new.packages))
   install.packages(new.packages)
