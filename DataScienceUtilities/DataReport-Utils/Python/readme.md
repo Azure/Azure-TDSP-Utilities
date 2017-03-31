@@ -28,7 +28,7 @@ To start IDEAR in Azure Notebooks:
 
 - Uplaod data and yaml file into Azure Blob storage
 - Log in to Azure Notebooks account
-- Upload [IDEAR-Python-AzureNotebooks.ipynb](IDEAR_Python_AzureNotebooks.ipynb) to your library
+- Upload [IDEAR-Python-AzureNotebooks.ipynb](IDEAR-Python-AzureNotebooks.ipynb) to your library
 - Type in the Azure Blob storage credentials when prompt
 
 For details, please read [instructions](IDEAR-Python-Instructions-JupyterNotebook.md).
