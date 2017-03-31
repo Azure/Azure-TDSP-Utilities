@@ -1,5 +1,5 @@
 DataFilePath:
-    - adult-income.csv
+    - ..\\..\\..\\Data\\Common\\UCI_Income\\train
 Target:
     label_IsOver50K
 CategoricalColumns:
