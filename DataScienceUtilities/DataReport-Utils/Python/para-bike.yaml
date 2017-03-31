@@ -1,0 +1,22 @@
+DataFilePath:
+    - bike-rental.csv
+Target:
+    cnt
+NumericalColumns:
+    - temp
+    - atemp
+    - hum
+    - windspeed
+    - cnt
+CategoricalColumns:
+    - dteday
+    - season
+    - yr
+    - mnth
+    - hr
+    - holiday
+    - weekday
+    - workingday
+    - weathersit
+    - casual
+    - registered

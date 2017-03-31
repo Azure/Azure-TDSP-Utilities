@@ -1,0 +1,21 @@
+DataFilePath:
+    - adult-income.csv
+Target:
+    label_IsOver50K
+CategoricalColumns:
+    - workclass
+    - education
+    - maritalstatus
+    - occupation
+    - relationship
+    - race
+    - sex
+    - nativecountry
+    - label_IsOver50K
+NumericalColumns:
+    - age 
+    - fnlwgt
+    - educationnum
+    - capitalgain
+    - capitalloss
+    - hoursperweek

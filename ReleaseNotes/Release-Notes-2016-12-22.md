@@ -4,7 +4,7 @@
 
 **Content of release**
 
-* [Interactive Data Exploration, Analysis, and Reporting (IDEAR) in Jupyter Notebooks (Python 2.7)](../DataScienceUtilities/DataReport-Utils/Python2)
+* [Interactive Data Exploration, Analysis, and Reporting (IDEAR) in Jupyter Notebooks (Python 2.7)](../DataScienceUtilities/DataReport-Utils/Python)
 * Interactive Data Exploration, Analysis, and Reporting (IDEAR) in R with New and Enhanced Features
 
 **Version of release**
@@ -19,7 +19,7 @@
 
 * IDEAR in Jupyter Notebooks (Python 2.7). Python users get interactive data exploration, analysis, visualization, and reporting capabilities similar to IDEAR in R. 
 * Automatic datetime fields featurization in IDEAR in R. This feature automatically extracts datetime components such as year, month, day, and day of week from user-specified datetime columns. The extracted datetime components are added as extra columns to the original dataset for analysis and exploration. If the data source is local file, the augmented dataset is saved in the directory containing the original data file.
-* Run IDEAR in R within Visual Studio using [R Tools for Visual Studio (RTVS)](http://microsoft.github.io/RTVS-docs/). For instructions, see [IDEAR in R documentation](../DataScienceUtilities/DataReport-Utils/team-data-science-process-idear-instructions.md). 
+* Run IDEAR in R within Visual Studio using [R Tools for Visual Studio (RTVS)](http://microsoft.github.io/RTVS-docs/). For instructions, see [IDEAR in R documentation](../DataScienceUtilities/DataReport-Utils/R/team-data-science-process-idear-instructions.md). 
 
 **Enhanced features**
 

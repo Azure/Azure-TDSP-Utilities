@@ -23,7 +23,7 @@ This R Markdown performs <b>exploratory</b> model training and evaluation for <b
 #rmarkdown::render("RegressionModelSelection.rmd")
 options(warn=-1)
 options(repos='http://cran.rstudio.com/')
-list.of.packages <- c('glmnet', 'yaml', 'randomForest', 'xgboost', 'lattice', 'shiny', 'gridExtra','lme4','RODBC','rminer', 'doSNOW')
+list.of.packages <- c('glmnet', 'yaml', 'randomForest', 'xgboost', 'lattice', 'shiny', 'gridExtra','lme4','RODBC')
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,'Package'])]
 if(length(new.packages))
   install.packages(new.packages)
@@ -50,10 +50,7 @@ library(randomForest)
 library(xgboost)
 library(lattice)
 library(gridExtra)
-library(rminer)
 library(caret)
-library(doSNOW)
-#source("https://raw.githubusercontent.com/tobigithub/R-parallel/gh-pages/R/code-setups/Install-doSNOW-parallel-DeLuxe.R")
 ```
 
 ##Specify YAML parameter file for input data and modeling
@@ -99,9 +96,6 @@ if (loadSQLData == TRUE) {
   trainDF <- sqlQuery(dbhandle, query)
   odbcClose(dbhandle)
 }
-
-## Replace missing values with 0
-trainDF[is.na(trainDF)] <- 0
 
 ## SELECT RELVANT COLUMNS 
 targetCol <- config$targetCol[1];
@@ -181,9 +175,8 @@ if (runXgBoost == TRUE) {
   gamma <- eval(parse(text=config$xgBoostParams[5]));
   colsample_bytree <- eval(parse(text=config$xgBoostParams[6]));
   min_child_weight <- eval(parse(text=config$xgBoostParams[7]));
-  xgBoostsubsample <- eval(parse(text=config$xgBoostParams[8]));
-  xgBoostObjective <- eval(parse(text=config$xgBoostParams[9])); 
-  xgBoostGrid = expand.grid(.nrounds = nrounds, .eta = eta, .max_depth = max_depth, .gamma = gamma, .colsample_bytree = colsample_bytree, .min_child_weight = min_child_weight, .subsample = xgBoostsubsample);
+  xgBoostObjective <- eval(parse(text=config$xgBoostParams[8])); 
+  xgBoostGrid = expand.grid(.nrounds = nrounds, .eta = eta, .max_depth = max_depth, .gamma = gamma, .colsample_bytree = colsample_bytree, .min_child_weight = min_child_weight);
   n_xgBoostgrid <- min(nrow(xgBoostGrid), nGridstoSweep);
   set.seed(123)
   xgBoostGrid <- xgBoostGrid[sample(as.numeric(rownames(xgBoostGrid)), n_xgBoostgrid),]
@@ -205,7 +198,7 @@ print (trainFormula)
 ```{r Train models, message=FALSE, warning=FALSE, echo=FALSE}
 # Fit glmnet model
 if (runGlmnet == TRUE) {
-  netFit <- caret::train(trainFormula, data = trainData, family = glmnetFamily, method = "glmnet", standardize = glmnetStandardize, tuneGrid = eGrid,  trControl = controlObject, metric = evaluationMetric); 
+  netFit <- train(trainFormula, data = trainData, family = glmnetFamily, method = "glmnet", standardize = glmnetStandardize, tuneGrid = eGrid,  trControl = controlObject, metric = evaluationMetric); 
   print (paste0("Train GlmNet Model: ", runGlmnet));
 }
 
@@ -244,19 +237,19 @@ par(mfrow = c(1, 3))
 if (runGlmnet == TRUE) {
   predictions$glmnet <- predict(netFit, testData, type='raw');
   glm.plot <- plot(predictions[,targetCol], predictions$glmnet, xlab='Actual', ylab='Predicted', col=rgb(10,100,10,50,maxColorValue=255), pch=16, cex=1, main ='glmnet', cex.main=1, cex.lab=1, cex.axis = 1);
-  legend("bottomright", inset = 0.01, legend=paste0("R2: ", round(rminer::mmetric(x=predictions[,targetCol], y=predictions$glmnet, metric='R2'),2)), cex=1, box.lty=0)
+  legend("bottomright", inset = 0.01, legend=paste0("R2: ", round(R2(predictions[,targetCol], predictions$glmnet),2)), cex=1, box.lty=0)
 }
 # Create scatterplot for actual vs. randomForest predictions
 if (runRf == TRUE) {
   predictions$rf <- predict(rfFit, testData, type='raw');
   rf.plot <- plot(predictions[,targetCol], predictions$rf, xlab='Actual', ylab='Predicted', col=rgb(10,100,10,50, maxColorValue=255), pch=16, cex=1, main ='randomForest', cex.main=1, cex.lab=1, cex.axis = 1);
-  legend("bottomright", inset = 0.01, legend=paste0("R2: ", round(rminer::mmetric(x=predictions[,targetCol], y=predictions$rf, metric='R2'),2)), cex=1, box.lty=0)
+  legend("bottomright", inset = 0.01, legend=paste0("R2: ", round(R2(predictions[,targetCol], predictions$rf),2)), cex=1, box.lty=0)
 }
 # Create scatterplot for actual vs. xgboost predictions
 if (runXgBoost == TRUE) {
   predictions$xgb <- predict(xgBTreeFit, testData, type='raw');
   xgb.plot <- plot(predictions[,targetCol], predictions$xgb, xlab='Actual', ylab='Predicted', col=rgb(10,100,10,50,maxColorValue=255), pch=16, cex=1, main ='xgboost', cex.main=1, cex.lab=1, cex.axis = 1);
-  legend("bottomright", inset = 0.01, legend=paste0("R2: ", round(rminer::mmetric(x=predictions[,targetCol], y=predictions$xgb, metric='R2'),2)), cex=1, box.lty=0)
+  legend("bottomright", inset = 0.01, legend=paste0("R2: ", round(R2(predictions[,targetCol], predictions$xgb),2)), cex=1, box.lty=0)
 }
 ```
 
@@ -264,7 +257,7 @@ if (runXgBoost == TRUE) {
 
 
 
-###Variable importance: Plot top 10 relative variable importances for different models
+###Variable importance: Plot top 20 relative variable importances for different models
 ```{r Variable importance, message=FALSE, warning=FALSE, fig.width=12, fig.height=6, echo=FALSE}
 if (runGlmnet == TRUE) {vI <- varImp(object=netFit, useModel = TRUE, scale=TRUE);  p1 <- plot(vI, main = "glmNet", xlab='Relative Importance', ylab = 'Feature', top=10);}
 if (runRf == TRUE) {vI <- varImp(object=rfFit, useModel = TRUE, scale=TRUE); p2 <- plot(vI, main = "randomForest", xlab='Relative Importance', ylab = 'Feature', top=10);}
