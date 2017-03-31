@@ -314,40 +314,40 @@ If you are using a source control platform to manage the artifacts of your data 
 ### 1. Sign in to Azure Notebooks 
 Use your Microsoft Account to sign in [Azure Notebooks](https://notebooks.azure.com/) by clicking **Sign In** in the front page.
 
- ![](.\media\login_notebook_service.PNG)
+ ![](.\media\login_notebook_service.png)
 
 After sign in, you can click **+New Library** to create a library, where you can save your Jupyter notebooks. You can create different libraries for different projects.
 
- ![](.\media\create_library.PNG)
+ ![](.\media\create_library.png)
 
 ### 2. Upload _IDEAR-Python-AzureNotebooks.ipynb_ to Azure Notebook Service
 
 From the cloned Utilities folder, Utilities --> DataScienceUtilities --> DataReport-Utils --> AzureNotebooks, upload _**IDEAR-Python-AzureNotebooks.ipynb**_ to the library.  
 
- ![](.\media\upload_to_azure_notebook_service.PNG)
+ ![](.\media\upload_to_azure_notebook_service.png)
 
 Open this notebook (you can choose Python 3 or 2) you will see the notebook is running on Azure Notebook server:
 
- ![](.\media\open_notebook_azure_notebook.PNG)
+ ![](.\media\open_notebook_azure_notebook.png)
 
 
 ### 3. Upload your data and YAML file to Azure Blob Storage
 
 You can install [Azure Storage Explorer](http://storageexplorer.com/) and upload your data and YAML file to blob storage account under your Azure subscription. Data and yaml files can be in different containers, though in the example notebook they are in the same one.
 
- ![](.\media\upload_to_blob.PNG)
+ ![](.\media\upload_to_blob.png) 
 
 ### 4. Set up connection to Azure Blob Storage
 
 All the cells in this notebook can be ran at one. When prompted, type in the storage account name, storage account key, and container name and press enter key to proceed.
 
- ![](.\media\type_in_blob_credential.PNG)
+ ![](.\media\type_in_blob_credential.png)
 
 
 ### 5. Specify and load YAML file
 
 Then you will be asked to type in YAML file name, where data set and variables information reside. A screenshot of the YAML file is shown below. 
 
- ![](.\media\specify_yaml.PNG)
+ ![](.\media\specify_yaml.png)
 
- ![](.\media\screen_shot_yaml.PNG)
+ ![](.\media\screen_shot_yaml.png)
