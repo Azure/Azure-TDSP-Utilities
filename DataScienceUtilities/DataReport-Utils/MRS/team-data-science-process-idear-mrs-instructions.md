@@ -314,7 +314,7 @@ The scatter plot of two numerical variables grouped by a categorical variable.
 
 ![](./media/team-data-science-process-idear-mrs-instructions/num-num-bycat.png)
 
-### 4.6 Visualize data patterns in lower dimensional space spanned by principal components
+### 4.8 Visualize data patterns in lower dimensional space spanned by principal components
 
 When the dimension of the data is high, data visualization is challenging. But visualizing the data can help us understand the clustering pattern in the data. If you see separated clusters in the data that are dominated by different classes of the target variable, you may estimate that this classification task might not be so challenging. Otherwise, the classification task might not be easy. You can also use this function to infer the quality of your feature set. 
 
