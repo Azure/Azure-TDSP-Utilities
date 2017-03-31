@@ -1,5 +1,5 @@
 DataFilePath:
-    - ..\\..\\..\\Data\\Common\\UCI_Bike_Rental\\hour.csv
+    - bike-rental.csv
 Target:
     cnt
 NumericalColumns:
