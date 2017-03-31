@@ -35,6 +35,6 @@
 * TDSP Project Template Repository:
 [https://github.com/Azure/Azure-TDSP-ProjectTemplate](https://github.com/Azure/Azure-TDSP-ProjectTemplate)
 * TDSP Instructions Repository:
-[https://github.com/Azure/Microsoft-TDSP](https://github.com/Azure/Azure-TDSP-ProjectTemplate)
+[https://github.com/Azure/Microsoft-TDSP](https://github.com/Azure/Microsoft-TDSP)
 * TDSP AMAR Utilities 
-[https://github.com/Azure/Azure-TDSP-Utilities/blob/master/DataScienceUtilities/Modeling](https://github.com/Azure/Azure-TDSP-ProjectTemplate)
+[https://github.com/Azure/Azure-TDSP-Utilities/blob/master/DataScienceUtilities/Modeling](https://github.com/Azure/Azure-TDSP-Utilities/tree/master/DataScienceUtilities/Modeling)
