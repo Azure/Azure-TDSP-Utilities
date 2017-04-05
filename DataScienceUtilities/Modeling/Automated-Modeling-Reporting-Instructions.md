@@ -1,4 +1,4 @@
-# Automated Modeling and Reporting in R
+ # Automated Modeling and Reporting in R
 
 
 ----------
@@ -46,7 +46,7 @@ Currently, the Automated Modeling and Reporting utility is provided in two .rmd 
 The primary differences being the way control parameters and accuracy metrics are specified for these learning tasks. 
 
 ----------
-## Prerequisites##
+## Prerequisites ##
 
 1. **Have R 3.2.3 or newer version installed** on your machine. 
 2. **Have RStudio installed** on your machine. Launch RStudio. 
