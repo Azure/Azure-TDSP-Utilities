@@ -8,8 +8,8 @@ output:
     toc: yes
     toc_float: true
     number_sections: true
-    css: style.css 
-    theme: journal
+    css: style.css 
+    theme: journal
     highlight: espresso
     fig_width: 7
     fig_height: 6
