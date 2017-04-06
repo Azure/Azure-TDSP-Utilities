@@ -30,7 +30,7 @@ options(repos='http://cran.rstudio.com/')
 list.of.packages <- c('Hmisc', 'psych', 'corrgram', 'yaml', 'entropy', 'vcd', 'shiny', 'corrplot', 'scatterplot3d', 'DescTools', 'xtable', 'shinyjs', 'RODBC','parallel','doSNOW','foreach', 'dplyr', 'lubridate', 'PCAmixdata')
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,'Package'])]
 if(length(new.packages))
-  install.packages(new.packages, dependencies = TRUE)
+  install.packages(new.packages, dependencies = TRUE)
 
 library(yaml)
 library(RODBC)
