@@ -9,7 +9,7 @@ Interactive Data Exploratory Analysis and Reporting (IDEAR) is a tool developed 
 
 The prerequisites are
 
-- R (recommended version: 3.3.1) 
+- R (recommended version: 3.3.1 or 3.3.2) 
 - RStudio
 
 To start IDEAR, 
