@@ -1389,8 +1389,14 @@ shinyApp(
 ## Project mixture of numerical and categorical variables to principal components, and visualize
 
 ```{r echo = FALSE, message=FALSE, warning=FALSE}
-
-if(((config$Target %in% config$CategoricalColumns) & length(config$CategoricalColumns) > 1) | (!(config$Target %in% config$CategoricalColumns) & length(config$CategoricalColumns)>=1))
+if (is.null(config$Target)){
+  cat_columns <- config$CategoricalColumns
+} else{
+  if (config$Target %in% config$CategoricalColumns){
+    cat_columns <- config$CategoricalColumns[!config$CategoricalColumns==config$Target] 
+  }
+}
+if(length(cat_columns) >= 1)
 {
   library(scatterplot3d)
   library(PCAmixdata)
@@ -1405,11 +1411,7 @@ if(((config$Target %in% config$CategoricalColumns) & length(config$CategoricalCo
     x11 <- scale(x11)
   }
   
-  if (config$Target %in% config$CategoricalColumns){
-    x22 = data[,config$CategoricalColumns[config$CategoricalColumns != config$Target]]
-  } else{
-    x22 = data[,config$CategoricalColumns]
-  }
+  x22 = data[,cat_columns]
   
   res.pcamix <- PCAmix(X.quanti=x11, X.quali=x22, rename.level=TRUE, graph=FALSE, ndim = Inf)
   num_mixedvars0 <- length(res.pcamix$eig[,1])
@@ -1442,6 +1444,13 @@ if(((config$Target %in% config$CategoricalColumns) & length(config$CategoricalCo
   library(scatterplot3d)
   library(PCAmixdata)
   data[is.na(data)] <- missingValueReplacement
+  if (is.null(config$Target)){
+    cat_columns <- config$CategoricalColumns
+  } else{
+    if (config$Target %in% config$CategoricalColumns){
+      cat_columns <- config$CategoricalColumns[!config$CategoricalColumns==config$Target] 
+    }
+  }
   if (length(config$NumericalColumns) > 0) {
     x11 <- apply(data[,config$NumericalColumns],2,min)
     y11 <- apply(data[,config$NumericalColumns],2,max)
@@ -1452,11 +1461,7 @@ if(((config$Target %in% config$CategoricalColumns) & length(config$CategoricalCo
     x11 <- scale(x11)
   }
   
-  if (config$Target %in% config$CategoricalColumns){
-    x22 = data[,config$CategoricalColumns[config$CategoricalColumns != config$Target]]
-  } else{
-    x22 = data[,config$CategoricalColumns]
-  }
+  x22 = data[,cat_columns]
   
   res.pcamix <- PCAmix(X.quanti=x11, X.quali=x22, rename.level=TRUE, graph=FALSE, ndim = Inf)
   num_mixedvars0 <- length(res.pcamix$eig[,1])
