@@ -1396,6 +1396,12 @@ if (is.null(config$Target)){
     cat_columns <- config$CategoricalColumns[!config$CategoricalColumns==config$Target] 
   }
 }
+
+# Remove the categorical columns which only have 1 unique value
+num_unique_cat_values <- sapply(data[,cat_columns], function(x) length(unique(x)))
+num_unique_cat_values <- as.data.frame(num_unique_cat_values)
+cat_columns <- rownames(num_unique_cat_values)[num_unique_cat_values>1]
+
 if(length(cat_columns) >= 1)
 {
   library(scatterplot3d)
@@ -1451,7 +1457,13 @@ if(length(cat_columns) >= 1)
       cat_columns <- config$CategoricalColumns[!config$CategoricalColumns==config$Target] 
     }
   }
-  if (length(config$NumericalColumns) > 0) {
+
+  # Remove the categorical columns which only have 1 unique value
+  num_unique_cat_values <- sapply(data[,cat_columns], function(x) length(unique(x)))
+  num_unique_cat_values <- as.data.frame(num_unique_cat_values)
+  cat_columns <- rownames(num_unique_cat_values)[num_unique_cat_values>1]
+
+  if(length(cat_columns) >= 1) {
     x11 <- apply(data[,config$NumericalColumns],2,min)
     y11 <- apply(data[,config$NumericalColumns],2,max)
     index11 <- x11 == y11
