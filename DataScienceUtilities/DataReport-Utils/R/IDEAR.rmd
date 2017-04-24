@@ -870,12 +870,12 @@ shinyApp(
 #  Investigate Multiple Variable Interactions
 
 ## Rank variables
-Rank variables (numerical and categorical) based on strengths of association with a selected variable. This helps you understand the top dependent variables (grouped by numerical and categorical) of the selected variable.
+Rank variables (numerical and categorical) based on strengths of association with a selected reference variable. This helps you understand the top dependent variables (grouped by numerical and categorical) of the selected variable.
 ```{r echo = FALSE, message=FALSE, warning=FALSE}
 shinyApp(
   
   ui = fluidPage(
-    inputPanel(selectInput("variable", label = "Variable:", choices = if(!is.null(config$Target)) { c(config$Target,config$NumericalColumns[config$NumericalColumns!=config$Target],config$CategoricalColumns[config$CategoricalColumns!=config$Target]) } else {c(config$NumericalColumns, config$CategoricalColumns)}),
+    inputPanel(selectInput("variable", label = "Ref Var:", choices = if(!is.null(config$Target)) { c(config$Target,config$NumericalColumns[config$NumericalColumns!=config$Target],config$CategoricalColumns[config$CategoricalColumns!=config$Target]) } else {c(config$CategoricalColumns,config$NumericalColumns)}),
   numericInput("top_num", label = "Top Numerical Variables", 5),
   numericInput("top_cat", label = "Top Categorical Variables", 5)),
   actionButton("go", "Go"),
@@ -908,11 +908,11 @@ shinyApp(
       get('config')
       get('data')
       get('missingValueReplacement')
-      if (max(data[[config$NumericalColumns[i]]]) != min(data[[config$NumericalColumns[i]]]))
+      col1 <- data[[config$NumericalColumns[i]]]
+      index1 <- is.na(col1)
+      col1[index1] <- missingValueReplacement
+      if (max(col1, na.rm=T) != min(col1, na.rm=T))
       {
-        col1 <- data[[config$NumericalColumns[i]]]
-        index1 <- is.na(col1)
-        col1[index1] <- missingValueReplacement
         fit <- aov(col1 ~ data[[input$variable]])
         tryCatch(EtaSq(fit)[1], error=function(e) 0)   
         
@@ -945,7 +945,9 @@ shinyApp(
     names(cramer_v) <- config$CategoricalColumns
     cramer_v <- subset(cramer_v, names(cramer_v)!=input$variable)
     cramer_v <- sort(cramer_v, decreasing = TRUE)
-    barplot(head(cramer_v, input$top_cat), xlab = 'Cramer\\'s V', beside=TRUE, main = paste('Top', length(head(cramer_v, input$top_cat)), 'Associated Categorical Variables'), las=2, cex.axis = 0.7)
+    if (length(cramer_v) > 0){
+      barplot(head(cramer_v, input$top_cat), xlab = 'Cramer\\'s V', beside=TRUE, main = paste('Top', length(head(cramer_v, input$top_cat)), 'Associated Categorical Variables'), las=2, cex.axis = 0.7)
+    }
     
     
   } else{
@@ -957,7 +959,9 @@ shinyApp(
       cor_s <- cor*cor
       names(cor_s) <- names(cor)
       cor_s <- sort(cor_s, decreasing = TRUE)
-      barplot(head(cor_s, input$top_num), xlab = 'R-squared (squared correlation)', beside=TRUE, main = paste('Top', length(head(cor_s, input$top_num)), 'Associated Numerical Variables'), las=2, cex.axis = 0.7)
+      if (length(cor_s) > 0){
+        barplot(head(cor_s, input$top_num), xlab = 'R-squared (squared correlation)', beside=TRUE, main = paste('Top', length(head(cor_s, input$top_num)), 'Associated Numerical Variables'), las=2, cex.axis = 0.7)
+      }
     }
     
     aov_v <- foreach(i=1:length(config$CategoricalColumns), .export=c('config', 'data', 'missingValueReplacement'), .packages=c('DescTools'), .combine='c') %dopar%
@@ -984,7 +988,9 @@ shinyApp(
     names(aov_v) <- config$CategoricalColumns
     aov_v <- subset(aov_v, names(aov_v)!=input$variable)
     aov_v <- sort(aov_v, decreasing = TRUE)
-    barplot(head(aov_v, input$top_cat), xlab = 'Eta-squared value', beside=TRUE, main = paste('Top', length(head(aov_v, input$top_cat)), 'Associated Categorical Variables'), las=2, cex.axis = 0.7)
+    if (length(aov_v) > 0){
+      barplot(head(aov_v, input$top_cat), xlab = 'Eta-squared value', beside=TRUE, main = paste('Top', length(head(aov_v, input$top_cat)), 'Associated Categorical Variables'), las=2, cex.axis = 0.7)
+    }
   }
   stopCluster(cluster)
   "
@@ -1398,9 +1404,17 @@ if (is.null(config$Target)){
 }
 
 # Remove the categorical columns which only have 1 unique value
-num_unique_cat_values <- sapply(data[,cat_columns], function(x) length(unique(x)))
-num_unique_cat_values <- as.data.frame(num_unique_cat_values)
-cat_columns <- rownames(num_unique_cat_values)[num_unique_cat_values>1]
+if (length(cat_columns) == 1){
+  num_unique_cat_values <- length(unique(data[,cat_columns]))
+  if (num_unique_cat_values == 1){
+    cat_columns <- NULL
+  }
+} else if (length(cat_columns) > 1) {
+  num_unique_cat_values <- sapply(data[,cat_columns], function(x) length(unique(x)))
+  num_unique_cat_values <- as.data.frame(num_unique_cat_values)
+  cat_columns <- rownames(num_unique_cat_values)[num_unique_cat_values>1]
+}
+
 
 if(length(cat_columns) >= 1)
 {
@@ -1459,9 +1473,16 @@ if(length(cat_columns) >= 1)
   }
 
   # Remove the categorical columns which only have 1 unique value
-  num_unique_cat_values <- sapply(data[,cat_columns], function(x) length(unique(x)))
-  num_unique_cat_values <- as.data.frame(num_unique_cat_values)
-  cat_columns <- rownames(num_unique_cat_values)[num_unique_cat_values>1]
+  if (length(cat_columns) == 1){
+    num_unique_cat_values <- length(unique(data[,cat_columns]))
+    if (num_unique_cat_values == 1){
+      cat_columns <- NULL
+    }
+  } else if (length(cat_columns) > 1) {
+    num_unique_cat_values <- sapply(data[,cat_columns], function(x) length(unique(x)))
+    num_unique_cat_values <- as.data.frame(num_unique_cat_values)
+    cat_columns <- rownames(num_unique_cat_values)[num_unique_cat_values>1]
+  }
 
   if(length(cat_columns) >= 1) {
     x11 <- apply(data[,config$NumericalColumns],2,min)
@@ -1553,7 +1574,7 @@ if(length(cat_columns) >= 1)
 ```
 
 ```{r echo = FALSE, message=FALSE, warning=FALSE}
-if(length(config$NumericalColumns)>=3)
+if(length(config$NumericalColumns)>=3 & length(cat_columns) >= 1)
 {
 shinyApp(
   
