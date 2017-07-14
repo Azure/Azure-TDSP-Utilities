@@ -79,7 +79,7 @@ An example YAML file can be found at [para-bike-rental-hour.yaml](para-bike-rent
 |RLogFilePath | Path and name of an R file to be created | **Required**. Path and name of an R file to hold the R scripts that a user export from the IDEAR interactive user interface. This file executes to generate the data report. | fraud.log.r |
 
 If you specify some columns as **DateTimeColumns**, IDEAR will convert these columns into **datetime** objects in R, and extract datetime componnets `Year`, `Month`, `Week Number`, `Day of Month`, `Day of Week`, `Hour of Day`, `Minute`, `Second` from these objects. These datetime component columns, if not constant, will be added to the the right side of the original dataset, and column names will be `<Original DateTime Column Name>_autogen_year`, `<Original DateTime Column Name>_autogen_month`, etc. They will be treated as categorical columns. The data exploration and analysis will be conducted on the dataset with these extra datetime component columns.
-After extracting datetime components, the original datetime columns are not needed further analysis. Therefore they are added to `ColumnsToExclude`. 
+After extracting datetime components, the original datetime columns are not needed in further analysis. Therefore they are added to `ColumnsToExclude`. 
 
 If the data source is local files, IDEAR will save the augmented data with datetime component columns to a local file, in the same directory of DataFilePath, with name __dt\_components_ added to the original file name. For instance, if the original data file is _C:\\temp\\a.csv_, the augmented data will be saved as _C:\\temp\\a_dt_components.csv_. 
 
