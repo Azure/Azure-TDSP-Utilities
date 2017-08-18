@@ -178,8 +178,9 @@ if (runXgBoost == TRUE) {
   gamma <- eval(parse(text=config$xgBoostParams[5]));
   colsample_bytree <- eval(parse(text=config$xgBoostParams[6]));
   min_child_weight <- eval(parse(text=config$xgBoostParams[7]));
-  xgBoostObjective <- eval(parse(text=config$xgBoostParams[8])); 
-  xgBoostGrid = expand.grid(.nrounds = nrounds, .eta = eta, .max_depth = max_depth, .gamma = gamma, .colsample_bytree = colsample_bytree, .min_child_weight = min_child_weight);
+  xgBoostObjective <- eval(parse(text=config$xgBoostParams[8]));
+  subsample        <- eval(parse(text=config$xgBoostParams[9]));
+  xgBoostGrid = expand.grid(.nrounds = nrounds, .eta = eta, .max_depth = max_depth, .gamma = gamma, .colsample_bytree = colsample_bytree, .min_child_weight = min_child_weight, .subsample = subsample);
   n_xgBoostgrid <- min(nrow(xgBoostGrid), nGridstoSweep);
   set.seed(123)
   xgBoostGrid <- xgBoostGrid[sample(as.numeric(rownames(xgBoostGrid)), n_xgBoostgrid),]
