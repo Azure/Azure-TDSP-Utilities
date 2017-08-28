@@ -18,5 +18,5 @@ if (!"shiny" %in% installed_packages){
 library(rmarkdown)
 script.dir <- dirname(sys.frame(1)$ofile)
 setwd(script.dir)
-rmdfile = "IDEAR_New.rmd"
+rmdfile = "IDEAR.rmd"
 rmarkdown::run(rmdfile)
