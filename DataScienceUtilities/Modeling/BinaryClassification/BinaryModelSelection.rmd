@@ -113,6 +113,8 @@ trainDF <- trainDF [,c(targetCol,featureCols)]
 ## CONVERT SOME COLUMNS TO FACTORS 
 factorCols <- eval(parse(text=config$factorCols[1])); 
 if (!is.null(factorCols)) {for (i in 1:length(factorCols)) { trainDF[, factorCols[i]] <- make.names(as.factor(trainDF[, factorCols[i]])) }}
+# If above line doesn't work, try this below.
+# if (!is.null(factorCols)) {for (i in 1:length(factorCols)) { trainDF$factorCols[i] <-as.factor(trainDF$factorCols[i]) }}
 
 ## Train test split
 inTrain = createDataPartition(as.integer(rownames(trainDF)), p = trainTestSplitFraction)$Resample1;
