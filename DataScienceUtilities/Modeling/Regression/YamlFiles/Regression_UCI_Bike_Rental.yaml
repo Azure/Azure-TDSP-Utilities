@@ -50,3 +50,4 @@ xgBoostParams:
     - 'colsample_bytree = c(0.5, 0.75, 1)'
     - 'min_child_weight = c(10, 50, 100)'
     - 'objective = "reg:linear"'
+    - 'subsample = 0.75'

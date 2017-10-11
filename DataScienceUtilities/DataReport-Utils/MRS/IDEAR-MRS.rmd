@@ -26,8 +26,12 @@ runtime: shiny
 options(warn=-1)
 
 # install required packages
-options(repos='http://cran.rstudio.com/')
-list.of.packages <- c('Hmisc', 'psych', 'corrgram', 'yaml', 'entropy', 'vcd', 'shiny', 'corrplot', 'scatterplot3d', 'DescTools', 'xtable', 'shinyjs', 'RODBC','parallel','doSNOW','foreach', 'dplyr', 'lubridate')
+repos.date <- "2017-08-01"
+options(repos = c(CRAN = paste("https://mran.revolutionanalytics.com/snapshot/",
+                               repos.date,sep="")))
+
+#options(repos='http://cran.rstudio.com/')
+list.of.packages <- c('Hmisc', 'psych', 'corrgram', 'yaml', 'entropy', 'vcd', 'shiny', 'corrplot', 'scatterplot3d', 'DescTools', 'xtable', 'shinyjs', 'RODBC','parallel','doSNOW','foreach', 'dplyr', 'lubridate', 'tcltk', 'tcltk2')
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,'Package'])]
 if(length(new.packages))
   install.packages(new.packages)
@@ -42,6 +46,11 @@ install_github("RevoEnhancements", "RevoEnhancements")
 library(RevoEnhancements)
 library(tools)
 library(vcd)
+library(tcltk)
+library(tcltk2)
+
+# set Shiny window size
+window_height <- 1000
 
 # Set a parallel computing context
 parallelContext = RxLocalParallel()
@@ -319,11 +328,11 @@ new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,'
 if(length(new.packages))
   install.packages(new.packages)
 
-# intall knitr version 1.12 
+# intall knitr version 1.16 
 if (!'knitr' %in% installed.packages()[,'Package']){
   knitrurl <- 'http://cran.r-project.org/src/contrib/Archive/knitr/knitr_1.12.tar.gz'
   install.packages(knitrurl, repos=NULL, type='source')
-} else if ('1.12' != installed.packages()['knitr','Version']){
+} else if ('1.16' != installed.packages()['knitr','Version']){
   remove.packages('knitr')
   knitrurl <- 'http://cran.r-project.org/src/contrib/Archive/knitr/knitr_1.12.tar.gz'
   install.packages(knitrurl, repos=NULL, type='source')
@@ -624,7 +633,8 @@ shinyApp(
       write(r_code(), file = config$RLogFilePath, append = TRUE)
     })
     
-  }
+  },
+  options = list(height = window_height)
 )
 ```
 
@@ -660,7 +670,8 @@ dim
      observeEvent(input$submit, {
        write(r_code(), file = config$RLogFilePath, append = TRUE)
      })
-   }
+   },
+  options = list(height = window_height)
  )
 
 ```
@@ -692,7 +703,8 @@ varInfo
     observeEvent(input$submit, {
       write(r, file = config$RLogFilePath, append = TRUE)
     })
-  }
+  },
+  options = list(height = window_height)
 )
 
 ```
@@ -728,7 +740,8 @@ as.data.frame(head(sum$categorical[[1]], 10))
     observeEvent(input$submit, {
       write(r, file = config$RLogFilePath, append = TRUE)
     })
-  }
+  },
+  options = list(height = window_height)
 )
 
 ```
@@ -784,7 +797,8 @@ if(isCategorical[config$Target])
       write(r_code(), file = config$RLogFilePath, append = TRUE)
     })
     
-  }
+  },
+  options = list(height = window_height)
 )
 } else {
   
@@ -833,7 +847,7 @@ shinyApp(
     
   },
   
-  options = list(height = 500)
+  options = list(height = 1000)
 )
 ```
 
@@ -879,7 +893,8 @@ shinyApp(
       write(r_code(), file = config$RLogFilePath, append = TRUE)
     })
     
-  }
+  },
+  options = list(height = window_height)
 )
 ```
 
@@ -988,7 +1003,8 @@ shinyApp(
       write(r_code(), file = config$RLogFilePath, append = TRUE)
     })
     
-  }
+  },
+  options = list(height = window_height)
 )
 
 ```
@@ -1032,7 +1048,8 @@ shinyApp(
       write(r_code(), file = config$RLogFilePath, append = TRUE)
     })
     
-  }
+  },
+  options = list(height = window_height)
 )
 ```
 
@@ -1074,7 +1091,8 @@ shinyApp(
       write(r_code(), file = config$RLogFilePath, append = TRUE)
     })
     
-  }
+  },
+  options = list(height = window_height)
 )
 ```
 
@@ -1121,7 +1139,8 @@ shinyApp(
     observeEvent(input$submit, {
       write(r_code(), file = config$RLogFilePath, append = TRUE)
     })
-  }
+  },
+  options = list(height = window_height)
 )
 }
 
@@ -1183,7 +1202,8 @@ shinyApp(
       write(r_code(), file = config$RLogFilePath, append = TRUE)
     })
     
-  }
+  },
+  options = list(height = window_height)
 )
 ```
 
@@ -1225,7 +1245,8 @@ shinyApp(
       write(r_code(), file = config$RLogFilePath, append = TRUE)
     })
     
-  }
+  },
+  options = list(height = window_height)
 )
 ```
 
@@ -1269,7 +1290,8 @@ shinyApp(
       write(r_code(), file = config$RLogFilePath, append = TRUE)
     })
     
-  }
+  },
+  options = list(height = window_height)
 )
 ```
 
@@ -1386,7 +1408,8 @@ legend('topright', cex=.8,  legend = levels(sampled_data_frame[[input$catvar]]),
       write(r_code(), file = config$RLogFilePath, append = TRUE)
     })
     
-  }
+  },
+  options = list(height = window_height)
 )
 
 }
@@ -1441,7 +1464,8 @@ shinyApp(
       write(r_code(), file = config$RLogFilePath, append = TRUE)
     })
     
-  }
+  },
+  options = list(height = window_height)
 )
 }
 
@@ -1475,6 +1499,7 @@ shinyApp(
       browseURL(file.path(getwd(), paste0(substr(config$RLogFilePath, 1, nchar(config$RLogFilePath)-1),'html')))
     })
     
-  }
+  },
+  options = list(height = window_height)
 )
 ```
