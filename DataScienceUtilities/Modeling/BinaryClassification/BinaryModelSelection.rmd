@@ -124,7 +124,7 @@ print (paste0("Train/test split percent: ", trainTestSplitFraction));
 head(trainData, 3);
 ```
 
-<hr>
+<hr> 
 
 ## Model training
 ### Define hyper-parameter sets for glmnet, randomForest and xgBoost
@@ -219,9 +219,11 @@ if (runXgBoost == TRUE) {
   print (paste0("Train xgBoost Model: ", runXgBoost));
 }
 ```
-<hr>
+
 ## Model evaluation: Compare model accuracies of different algorithms, and examine variable importance
+
 ### Plot accuracy in test data vs. alogrithms
+
 ```{r Compare model accuracy, message=FALSE, warning=FALSE, fig.width=12, fig.height=4, echo=FALSE}
 if (runGlmnet == TRUE &  runRf == TRUE & runXgBoost == TRUE) {allResamples <- resamples(list("glm-net" = netFit, "randomForest" = rfFit, "xgboost" = xgBTreeFit))} else if (runGlmnet == TRUE &  runRf == TRUE) {allResamples <- resamples(list("glm-net" = netFit, "randomForest" = rfFit))} else if (runGlmnet == TRUE &  runXgBoost == TRUE) {allResamples <- resamples(list("glm-net" = netFit, "xgboost" = xgBTreeFit))} else if (runRf == TRUE &  runXgBoost == TRUE) {allResamples <- resamples(list("randomForest" = rfFit, "xgboost" = xgBTreeFit))} else if (runGlmnet == TRUE) {allResamples <- resamples(list("glm-net" = netFit))} else if (runRf == TRUE) {allResamples <- resamples(list("randomForest" = rfFit))} else if (runXgBoost == TRUE) {allResamples <- resamples(list("xgboost" = xgBTreeFit))}
 
