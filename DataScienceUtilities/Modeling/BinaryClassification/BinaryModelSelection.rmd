@@ -15,7 +15,7 @@ runtime: knit
 ---
 
 <hr>
-##Introduction
+## Introduction
 This R Markdown performs <b>exploratory</b> model training and evaluation for <b>binary classification</b> tasks using the <a href="http://topepo.github.io/caret/index.html" target="_blank">Caret package</a>, which has convenient functions for resampling, hyper-parameter sweeping, and model accuracy comparison. The user can use Caret with R machine learning packages (such as, <a href="https://cran.r-project.org/web/packages/glmnet/index.html" target="_blank">glmnet</a>, <a href="https://cran.r-project.org/web/packages/randomForest/index.html" target="_blank">RandomForest</a>, <a href="https://cran.r-project.org/web/packages/xgboost/index.html" target="_blank">xgboost</a>, etc.). We use these three algorithms with limited paraUsers can customize this template to create their own model training and evaluation process for binary classification tasks. 
 <hr>
 
@@ -55,7 +55,7 @@ library(ROCR)
 library(RODBC)
 ```
 
-##Specify YAML parameter file for input data and modeling
+## Specify YAML parameter file for input data and modeling
 Specify the file which contins the parameter set to train the ML models with. If there are multiple values for each parameter file, then modes ML algorithms will be run with a specified number of random combination of these parameters (currently set to 59).
 
 ```{r Read in model parameters from yaml file, message=FALSE, warning=FALSE, echo=FALSE}
@@ -66,7 +66,7 @@ print (paste0("Yaml file loc: ", yamlFile));
 <hr>
 <br>
 
-##Input data, and splitting data into train/test
+## Input data, and splitting data into train/test
 Once the data is read in, it is split into training and testing. Modeling is run on training data (using CV/bootstrapping and parameter sweeping), and evaluated on the test data.
 
 ```{r Read and process data from SQL Source, message=FALSE, warning=FALSE, echo=FALSE}
@@ -127,8 +127,8 @@ head(trainData, 3);
 
 <hr>
 
-##Model training
-###Define hyper-parameter sets for glmnet, randomForest and xgBoost
+## Model training
+### Define hyper-parameter sets for glmnet, randomForest and xgBoost
 Create the control object for cross validation and parameter sweeping. Here we can use <a href="http://www.inside-r.org/packages/cran/caret/docs/oneSE" target="_blank">OneSE</a> (one standard error) as selection function. By default, Caret's train uses 'best' model, i.e. the tuning parameters associated with the largest (or lowest for "RMSE") performance. oneSE is a rule in the spirit of the "one standard error" rule of Breiman et al. (1984), who suggest that the tuning parameter associated with the best performance may over fit. They suggest that the simplest model within one standard error of the empirically optimal model is the better choice. 
 <br><br>
 Also, for hyper-parameter sweeping, within a fixed computational time, selecting a random set of parameters (or 'random' search option) is typically a better choise than entire grid search for identifying parameter-set that will provide an optimal model, <a href="http://www.jmlr.org/papers/volume13/bergstra12a/bergstra12a.pdf" target="_blank">Bergstra and Bengio, 2012</a>. Therefore, we use a 59 point random grid sample of hyper-parameters. Choosing 59 random points from a hyper-parameter grid will guarantee with 95% confidence that one of the hyper-parameter set will provide a model with accuracy that is within top 5% of the accuracy of all the grid hyper-parameters.
@@ -201,7 +201,7 @@ trainFormula <- as.formula(paste(targetCol, "~", features));
 print (trainFormula)
 ```
 
-###Train glmnet, randomForest, and xgBoost with parameter sweeping
+### Train glmnet, randomForest, and xgBoost with parameter sweeping
 ```{r Train models, message=FALSE, warning=FALSE, echo=FALSE}
 # Fit glmnet model
 if (runGlmnet == TRUE) {
@@ -234,7 +234,7 @@ grid.arrange(p1,p2,p3, ncol=3)
 ```
 
 
-###Visualize scatterplot of actual vs. predicted values in the <b>test data</b> from different models
+### Visualize scatterplot of actual vs. predicted values in the <b>test data</b> from different models
 ```{r Visualize actual vs. predicted values in training data, message=FALSE, warning=FALSE, fig.width=10, fig.height=4, echo=FALSE}
 # Get predictions from models
 predictions <- data.frame(testData[,targetCol]); colnames(predictions) <- targetCol;
@@ -265,7 +265,7 @@ if (runXgBoost == TRUE) {
 
 
 
-###Variable importance: Plot top 10 relative variable importances for different models
+### Variable importance: Plot top 10 relative variable importances for different models
 ```{r Variable importance, message=FALSE, warning=FALSE, fig.width=12, fig.height=6, echo=FALSE}
 if (runGlmnet == TRUE) {vI <- varImp(object=netFit, useModel = TRUE, scale=TRUE);  p1 <- plot(vI, main = "glmNet", xlab='Relative Importance', ylab = 'Feature', top=10);}
 if (runRf == TRUE) {vI <- varImp(object=rfFit, useModel = TRUE, scale=TRUE); p2 <- plot(vI, main = "randomForest", xlab='Relative Importance', ylab = 'Feature', top=10);}
@@ -276,7 +276,7 @@ if (runGlmnet == TRUE &  runRf == TRUE & runXgBoost == TRUE) {grid.arrange(p1,p2
 <hr>
 
 
-##Summary
+## Summary
 Here we perform preliminary exploration of 3 algorithms with limited CV and parameter grid sweeping and compare the accuracy of the models in the test data. Based on these explorations, user may decide to use a limited number of algorithms for creating models with extensive parameters sweeping and evaluating those models in the test data-set. Users may modify the code to explore according to the needs of their data-sets or based on their experience with <a href="https://topepo.github.io/caret/modelList.html" target="_blank">other algorithms</a> available for use through Caret. The top 2-3 approaches could be taken for further model development and testing using the test data-set. Also, there are many alternative ways to run the algorithms, besides caret, and compare the results.
 
 
