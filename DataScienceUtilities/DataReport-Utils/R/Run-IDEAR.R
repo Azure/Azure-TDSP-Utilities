@@ -21,7 +21,7 @@ if (!"shiny" %in% installed_packages){
 
 library(rmarkdown)
 library(tcltk)
-library(tcltk2)
+#library(tcltk2)
 
 script.dir <- dirname(sys.frame(1)$ofile)
 setwd(script.dir)

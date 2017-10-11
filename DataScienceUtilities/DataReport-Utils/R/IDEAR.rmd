@@ -43,7 +43,7 @@ library(lattice)
 library(DescTools)
 
 # set Shiny window size
-window_height <- 1000
+window_height <- 600
 
 OS_type <- .Platform$OS.type
 if (OS_type == 'windows'){
@@ -243,14 +243,13 @@ new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,'
 if(length(new.packages))
   install.packages(new.packages)
 
-# intall knitr version 1.12 
-if (!'knitr' %in% installed.packages()[,'Package']){
-  knitrurl <- 'http://cran.r-project.org/src/contrib/Archive/knitr/knitr_1.12.tar.gz'
-  install.packages(knitrurl, repos=NULL, type='source')
-} else if ('1.12' != installed.packages()['knitr','Version']){
+# install knitr
+installed_packages <- rownames(installed.packages())
+if (!'knitr' %in% installed_packages){
+  install.packages('knitr')
+} else if ('1.16' != installed.packages()['knitr','Version']){
   remove.packages('knitr')
-  knitrurl <- 'http://cran.r-project.org/src/contrib/Archive/knitr/knitr_1.12.tar.gz'
-  install.packages(knitrurl, repos=NULL, type='source')
+  install.packages('knitr')
 }
 
 library(yaml)
