@@ -29,9 +29,7 @@ options(warn=-1)
 repos.date <- "2017-08-01"
 options(repos = c(CRAN = paste("https://mran.revolutionanalytics.com/snapshot/",
                                repos.date,sep="")))
-
-#options(repos='http://cran.rstudio.com/')
-list.of.packages <- c('Hmisc', 'psych', 'corrgram', 'yaml', 'entropy', 'vcd', 'shiny', 'corrplot', 'scatterplot3d', 'DescTools', 'xtable', 'shinyjs', 'RODBC','parallel','doSNOW','foreach', 'dplyr', 'lubridate', 'PCAmixdata')
+list.of.packages <- c('Hmisc', 'psych', 'corrgram', 'yaml', 'entropy', 'vcd', 'shiny', 'corrplot', 'scatterplot3d', 'DescTools', 'xtable', 'shinyjs', 'RODBC','parallel','doSNOW','foreach', 'dplyr', 'lubridate', 'PCAmixdata', 'caret', 'Rtsne')
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,'Package'])]
 if(length(new.packages))
   install.packages(new.packages, dependencies = TRUE)
@@ -72,6 +70,8 @@ library(lubridate)
 autogen_datetime_columns <- character()
 if(!is.null(config$DateTimeColumns)){
   for (dt in names(config$DateTimeColumns)) {
+    index <- is.na(data[[dt]]) | data[[dt]] == 'NULL'
+    data[[index, dt]] <- '01/01/1900'
     data[[dt]] <- as.POSIXct(data[[dt]], format = config$DateTimeColumns[[dt]])
     
     new_col_name <- paste0(dt, '_autogen_year')
@@ -1410,6 +1410,95 @@ shinyApp(
 )
 }
 
+```
+
+## Project numerical variables to 2-D space using t-SNE
+Project high-dimension numerical variables into 2-D space with cluster pattern rendered by using t-SNE. This can be helpful for you to understand the clustering pattern in your feature space. For classification problems, if you see clusters dominated by different class labels, it might indicate that the features are helpful for you to separate the observations. 
+
+However, always keep a pair of thinking eyes, since you can also see clear clustering pattern if your features include target leakers.
+```{r echo = FALSE, message=FALSE, warning=FALSE}
+if(length(config$NumericalColumns)>=3 & length(c(config$Target, config$CategoricalColumns)) > 0)
+{
+shinyApp(
+  
+  ui = fluidPage(
+    inputPanel(selectInput("variable", label = "Ref Var:", choices = if(!is.null(config$Target)) { c(config$Target,config$CategoricalColumns[config$CategoricalColumns!=config$Target]) } else {config$CategoricalColumns}),
+  numericInput("random_seed", label = "Random Seed", 98052),
+  numericInput("neighbors", label = "Nearest Neighbors (5-50)", 30)),
+  actionButton("go", "Go"),
+  plotOutput("plot"),
+  actionButton("submit", label = "Export")
+  ),
+  
+  server = function(input, output) {
+    
+   r = "
+#' ## Project numerical variables to 2-D space using t-SNE
+#' Project high-dimension numerical variables into 2-D space with cluster pattern rendered by using t-SNE. This can be helpful for you to understand the clustering pattern in your feature space. For classification problems, if you see clusters dominated by different class labels, it might indicate that the features are helpful for you to separate the observations. 
+#'
+#' However, always keep a pair of thinking eyes, since you can also see clear clustering pattern if your features include target leakers.
+#+ echo=FALSE
+    if(nrow(data)>50000) {
+      library(dplyr)
+      set.seed(98052)
+      data <- sample_n(data, 50000)
+    }
+
+    library(caret)
+    library(Rtsne)
+    set.seed(input$random_seed)
+    data[is.na(data)] <- missingValueReplacement
+    x <- apply(data[,config$NumericalColumns],2,min)
+    y <- apply(data[,config$NumericalColumns],2,max)
+    index <- x == y
+    nonConstantNames <- config$NumericalColumns[!index]
+
+    x <- data[,nonConstantNames]
+    x <- scale(x)
+    tsne_model_1 <- Rtsne(as.matrix(x), check_duplicates = FALSE, pca = TRUE, 
+      perplexity = input$neighbors, theta = 0.5, dims = 2)
+    d_tsne_1 <- as.data.frame(tsne_model_1$Y)
+    d_tsne_1_original <- d_tsne_1
+    fit_cluster_kmeans = kmeans(scale(d_tsne_1), length(unique(data[,input$variable])))
+    d_tsne_1_original$label <- factor(data[,input$variable])
+    plot_cluster=function(data, var_cluster, palette)  
+    {
+      ggplot(data, aes_string(x='V1', y='V2', color=var_cluster)) +
+      geom_point(size=1.5) +
+      guides(colour=guide_legend(override.aes=list(size=6))) +
+      xlab('') + ylab('') +
+      ggtitle('') +
+      theme_light(base_size=20) +
+      theme(axis.text.x=element_blank(),
+        axis.text.y=element_blank(),
+        legend.direction = 'horizontal', 
+        legend.position = 'bottom',
+        legend.box = 'horizontal') + 
+      scale_colour_brewer(palette = palette) 
+    }
+
+
+    plot_k=plot_cluster(d_tsne_1_original, 'label', 'Set1') 
+    library(gridExtra)  
+    grid.arrange(plot_k, ncol=1)  
+  "
+
+    r_code <- eventReactive(input$go, {
+      r = gsub("input\\$variable", paste0("'",input$variable,"'"), r)
+  	  r = gsub("input\\$random_seed", input$random_seed, r)
+	    gsub("input\\$neighbors", input$neighbors, r)
+	    })
+    output$plot <- renderPlot({
+      eval(parse(text = r_code()))
+    })
+    
+    observeEvent(input$submit, {
+      write(r_code(), file = config$RLogFilePath, append = TRUE)
+    })
+    
+  }
+)
+}
 ```
 
 ## Project mixture of numerical and categorical variables to principal components, and visualize
