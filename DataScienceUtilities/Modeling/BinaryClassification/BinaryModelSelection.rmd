@@ -16,6 +16,7 @@ runtime: knit
 
 <hr>
 ## Introduction
+
 This R Markdown performs <b>exploratory</b> model training and evaluation for <b>binary classification</b> tasks using the <a href="http://topepo.github.io/caret/index.html" target="_blank">Caret package</a>, which has convenient functions for resampling, hyper-parameter sweeping, and model accuracy comparison. The user can use Caret with R machine learning packages (such as, <a href="https://cran.r-project.org/web/packages/glmnet/index.html" target="_blank">glmnet</a>, <a href="https://cran.r-project.org/web/packages/randomForest/index.html" target="_blank">RandomForest</a>, <a href="https://cran.r-project.org/web/packages/xgboost/index.html" target="_blank">xgboost</a>, etc.). We use these three algorithms with limited paraUsers can customize this template to create their own model training and evaluation process for binary classification tasks. 
 <hr>
 
