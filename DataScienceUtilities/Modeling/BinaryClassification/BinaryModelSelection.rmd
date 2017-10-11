@@ -113,7 +113,8 @@ trainDF <- trainDF [,c(targetCol,featureCols)]
 ## CONVERT SOME COLUMNS TO FACTORS 
 factorCols <- eval(parse(text=config$factorCols[1])); 
 if (!is.null(factorCols)) {for (i in 1:length(factorCols)) { trainDF[, factorCols[i]] <- make.names(as.factor(trainDF[, factorCols[i]])) }}
-# If above line doesn't work, try this below.
+# NOTE: If above line gives an error, try this below. It is possible that trainDF[, factorCols[i]] does not work in some versions of R. 
+# In that case, try this convention: trainDF$column (below)
 # if (!is.null(factorCols)) {for (i in 1:length(factorCols)) { trainDF$factorCols[i] <-as.factor(trainDF$factorCols[i]) }}
 
 ## Train test split
