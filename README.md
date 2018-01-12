@@ -1,10 +1,10 @@
 # Data Science Utilities from Microsoft
 
-[**Interactive Data Exploration, Analysis, and Reporting**](DataScienceUtilities/DataReport-Utils/) | [**Automated Modeling and Reporting**](DataScienceUtilities/Modeling/) | [**TDSP**](https://github.com/Azure/Microsoft-TDSP)
+[**Interactive Data Exploration, Analysis, and Reporting**](DataScienceUtilities/DataReport-Utils/) | [**Automated Modeling and Reporting**](DataScienceUtilities/Modeling/) | [**TDSP**](https://docs.microsoft.com/en-us/azure/machine-learning/team-data-science-process/overview)
 
 This repository contains the **Data Science Utilities** developed by **Team Data Science Process (TDSP) from Microsoft**. 
 
-Shared data science utility is a key component of [TDSP](https://github.com/Azure/Microsoft-TDSP). Shared data science utilities can make the execution of data science projects more efficient. 
+Shared data science utility is a key component of [TDSP](https://docs.microsoft.com/en-us/azure/machine-learning/team-data-science-process/overview). Shared data science utilities can make the execution of data science projects more efficient. 
 
 ## Release Notes
 
