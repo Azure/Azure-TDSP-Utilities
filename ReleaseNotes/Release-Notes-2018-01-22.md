@@ -6,6 +6,8 @@
 
 Fixed minor bugs and added user license.
 
+NOTE: Screenshots of [RStudio](https://www.rstudio.com/) are from the Open Source Edition.
+
 **Version of release**
 
 * 0.14
