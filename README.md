@@ -27,6 +27,9 @@ We would love to hear back from you. Should you have any questions or suggestion
 We believe that with the help of the data science community, the set of data science utilities can be significantly enriched and can become more powerful, and can benefit more enterprises and more data scientists. We warmly welcome you to contribute to the data science utilities for TDSP.
 
 ## What Is TDSP
-To know more details about TDSP, check out the TDSP documents [here](https://github.com/Azure/Microsoft-TDSP).
+To know more details about TDSP, check out the TDSP documents [here](https://aka.ms/tdsp).
+
+## Additional notes
+In documentations, Screenshots of [RStudio](https://www.rstudio.com/) are from the Open Source Edition.
 
 
