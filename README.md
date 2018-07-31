@@ -2,13 +2,11 @@
 
 [**Interactive Data Exploration, Analysis, and Reporting**](DataScienceUtilities/DataReport-Utils/) | [**Automated Modeling and Reporting**](DataScienceUtilities/Modeling/) | [**TDSP**](https://docs.microsoft.com/en-us/azure/machine-learning/team-data-science-process/overview)
 
-This repository contains the **Data Science Utilities** developed by **Team Data Science Process (TDSP) from Microsoft**. 
-
-Shared data science utility is a key component of [TDSP](https://docs.microsoft.com/en-us/azure/machine-learning/team-data-science-process/overview). Shared data science utilities can make the execution of data science projects more efficient. 
+This repository contains a set of **Data Science Utilities** developed for use in the context of the [Team Data Science Process (TDSP)](https://docs.microsoft.com/en-us/azure/machine-learning/team-data-science-process/overview).
 
 ## Release Notes
 
-This is an **early preview** release of the Data Science Utilities for TDSP. We are continuously improving our data science utilities based on our further accumulated experience, and customer requests. Stay tuned for future releases. 
+This is an **early preview** release of the Data Science Utilities for TDSP. We are continuously improving our data science utilities based on our further accumulated experience and customer requests. Stay tuned for future releases.
 
 Currently, the Data Science Utilities released in this repository include:
 
@@ -17,7 +15,7 @@ Currently, the Data Science Utilities released in this repository include:
 - [Interactive Data Exploration, Analysis, and Reporting (IDEAR) in Python](DataScienceUtilities/DataReport-Utils/Python).
 - [Automated Modeling and Reporting in R (AMAR in R)](DataScienceUtilities/Modeling/)
 
-You can easily run these utilities on sample data in the **Data/Common** directory. If you are using [Azure Data Science Virtual Machine](https://azure.microsoft.com/en-us/marketplace/partners/microsoft-ads/standard-data-science-vm/), all three utilities are instantly ready to run. 
+You can easily run these utilities on sample data in the **Data/Common** directory. If you are using [Azure Data Science Virtual Machine](https://azure.microsoft.com/en-us/marketplace/partners/microsoft-ads/standard-data-science-vm/), all three utilities are instantly ready to run.
 
 ## Ask Questions. 
 
