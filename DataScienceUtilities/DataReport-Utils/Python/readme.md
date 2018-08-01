@@ -33,9 +33,10 @@ To start IDEAR in Azure Notebooks:
 
 For details, please read [instructions](IDEAR-Python-Instructions-JupyterNotebook.md).
 
-### Python Modules 
-The Python modules that are used in IDEAR are as follows. If your Jupyter Notebook server is running on Anaconda Python (2.7 or 3.5), most of the needed modules have been installed when you install Anaconda Python, with a few exceptions. However, if you are using [Azure Data Science Virtual Machines (DSVM)](https://azure.microsoft.com/en-us/marketplace/partners/microsoft-ads/standard-data-science-vm/), all modules are installed. 
- 
+### Python Modules
+
+The Python modules that are used in IDEAR are as follows. If your Jupyter Notebook server is running on Anaconda Python (2.7 or 3.5), most of the needed modules have been installed when you install Anaconda Python, with a few exceptions. However, if you are using [Azure Data Science Virtual Machines (DSVM)](https://azure.microsoft.com/en-us/marketplace/partners/microsoft-ads/standard-data-science-vm/), all modules are installed.
+
 - pandas
 - numpy
 - os
@@ -53,8 +54,30 @@ The Python modules that are used in IDEAR are as follows. If your Jupyter Notebo
 - seaborn
 - string
 - functools
+- pyyaml
+- scikit-learn
 
 *Not included in Anaconda Python, but included in DSVM.
+
+See the next section and the `idear_env.yml` file for specific versions of additional installs.
+
+### Conda environment
+
+The `idear_env.yml` provides a mechanism for creating a reproducible environment for running this tool. It requires that some version of the `conda` tool is installed (testing was done on Windows 10 machine with conda 4.3.30). You can create the conda environment by running a command prompt with access to conda in it and running:
+
+```
+cd PATH/TO/THIS/README/FILE
+conda env create -f idear_env.yml
+```
+
+In order to execute the `IDEAR.ipynb` notebook against this, you will need to either:
+
+- (RECOMMENDED): [Install the nb_conda_kernels package](https://github.com/Anaconda-Platform/nb_conda_kernels) to the environment in which you are launching jupyter. Once you open the notebook with the conda environment created, you can then just set that environment as the appropriate kernel for execution.
+- install jupyter as a dependency within the newly created environment and launch jupyter from within that environment
+
+**NOTE** There are likely to be some warnings around different versions of Javascript that result from this environment, particularly if you leverage it in the RECOMMENDED approach above.
+
+### Support Functions
 
 TDSP team from Microsoft also defined some functions to support IDEAR in Jupyter Notebook (Python 2.7 and 3.5). These functions are encapsulated in the following Python source code files. These files are in the same directory as this readme.md. 
 
