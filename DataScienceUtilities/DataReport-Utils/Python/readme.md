@@ -26,7 +26,7 @@ To start IDEAR in Jupyter Notebook running on Python (2.7 or 3.5),
 
 To start IDEAR in Azure Notebooks:
 
-- Uplaod data and yaml file into Azure Blob storage
+- Upload data and yaml file into your Azure Blob storage
 - Log in to Azure Notebooks account
 - Upload [IDEAR-Python-AzureNotebooks.ipynb](IDEAR-Python-AzureNotebooks.ipynb) to your library
 - Type in the Azure Blob storage credentials when prompt
