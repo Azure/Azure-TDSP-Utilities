@@ -73,7 +73,26 @@ conda env create -f idear_env.yml
 In order to execute the `IDEAR.ipynb` notebook against this, you will need to either:
 
 - (RECOMMENDED): [Install the nb_conda_kernels package](https://github.com/Anaconda-Platform/nb_conda_kernels) to the environment in which you are launching jupyter. Once you open the notebook with the conda environment created, you can then just set that environment as the appropriate kernel for execution.
-- install jupyter as a dependency within the newly created environment and launch jupyter from within that environment
+- Alternatively, you can run jupyter from the conda environment created (the instructions vary slightly for bash vs. powershell). However, it's a good idea to run `jupyter nbextension enable --py –sys-prefix widgetsnbextension` from this environment prior to starting the notebook server.
+
+For PowerShell:
+
+```
+conda activate idear_env
+```
+
+For Bash:
+
+```
+source activate idear_env
+```
+
+Then, in either shell, 
+
+```
+jupyter nbextension enable --py –sys-prefix widgetsnbextension
+jupyter notebook
+```
 
 **NOTE** There are likely to be some warnings around different versions of Javascript that result from this environment, particularly if you leverage it in the RECOMMENDED approach above.
 
